@@ -1,0 +1,67 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  name: MyString
+  description: MyText
+  user_id: 1
+  instance_type: MyString
+  number_of_instances: 1
+  availability_zone: MyString
+  input_files: MyText
+  commands: MyText
+  output_path: MyString
+  output_files: MyText
+  shutdown_after_complete: false
+  master_ami_id: MyString
+  worker_ami_id: MyString
+  log_path: MyString
+  keypair: MyString
+  ebs_volumes: MyText
+  mpi_version: MyString
+  mpi_service_rest_url: MyString
+  created_at: 2009-04-24 18:38:26
+  submitted_at: 2009-04-24 18:38:26
+  started_at: 2009-04-24 18:38:26
+  updated_at: 2009-04-24 18:38:26
+  finished_at: 2009-04-24 18:38:26
+  state: MyString
+  progress: MyString
+  error_message: MyText
+  master_security_group: MyString
+  worker_security_group: MyString
+  master_instance_id: MyString
+  master_hostname: MyString
+  master_public_hostname: MyString
+
+two:
+  name: MyString
+  description: MyText
+  user_id: 1
+  instance_type: MyString
+  number_of_instances: 1
+  availability_zone: MyString
+  input_files: MyText
+  commands: MyText
+  output_path: MyString
+  output_files: MyText
+  shutdown_after_complete: false
+  master_ami_id: MyString
+  worker_ami_id: MyString
+  log_path: MyString
+  keypair: MyString
+  ebs_volumes: MyText
+  mpi_version: MyString
+  mpi_service_rest_url: MyString
+  created_at: 2009-04-24 18:38:26
+  submitted_at: 2009-04-24 18:38:26
+  started_at: 2009-04-24 18:38:26
+  updated_at: 2009-04-24 18:38:26
+  finished_at: 2009-04-24 18:38:26
+  state: MyString
+  progress: MyString
+  error_message: MyText
+  master_security_group: MyString
+  worker_security_group: MyString
+  master_instance_id: MyString
+  master_hostname: MyString
+  master_public_hostname: MyString

@@ -1,0 +1,80 @@
+<h1>Listing jobs</h1>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>User</th>
+    <th>Instance type</th>
+    <th>Number of instances</th>
+    <th>Availability zone</th>
+    <th>Input files</th>
+    <th>Commands</th>
+    <th>Output path</th>
+    <th>Output files</th>
+    <th>Shutdown after complete</th>
+    <th>Master ami</th>
+    <th>Worker ami</th>
+    <th>Log path</th>
+    <th>Keypair</th>
+    <th>Ebs volumes</th>
+    <th>Mpi version</th>
+    <th>Mpi service rest url</th>
+    <th>Created at</th>
+    <th>Submitted at</th>
+    <th>Started at</th>
+    <th>Updated at</th>
+    <th>Finished at</th>
+    <th>State</th>
+    <th>Progress</th>
+    <th>Error message</th>
+    <th>Master security group</th>
+    <th>Worker security group</th>
+    <th>Master instance</th>
+    <th>Master hostname</th>
+    <th>Master public hostname</th>
+  </tr>
+
+<% @jobs.each do |job| %>
+  <tr>
+    <td><%=h job.name %></td>
+    <td><%=h job.description %></td>
+    <td><%=h job.user_id %></td>
+    <td><%=h job.instance_type %></td>
+    <td><%=h job.number_of_instances %></td>
+    <td><%=h job.availability_zone %></td>
+    <td><%=h job.input_files %></td>
+    <td><%=h job.commands %></td>
+    <td><%=h job.output_path %></td>
+    <td><%=h job.output_files %></td>
+    <td><%=h job.shutdown_after_complete %></td>
+    <td><%=h job.master_ami_id %></td>
+    <td><%=h job.worker_ami_id %></td>
+    <td><%=h job.log_path %></td>
+    <td><%=h job.keypair %></td>
+    <td><%=h job.ebs_volumes %></td>
+    <td><%=h job.mpi_version %></td>
+    <td><%=h job.mpi_service_rest_url %></td>
+    <td><%=h job.created_at %></td>
+    <td><%=h job.submitted_at %></td>
+    <td><%=h job.started_at %></td>
+    <td><%=h job.updated_at %></td>
+    <td><%=h job.finished_at %></td>
+    <td><%=h job.state %></td>
+    <td><%=h job.progress %></td>
+    <td><%=h job.error_message %></td>
+    <td><%=h job.master_security_group %></td>
+    <td><%=h job.worker_security_group %></td>
+    <td><%=h job.master_instance_id %></td>
+    <td><%=h job.master_hostname %></td>
+    <td><%=h job.master_public_hostname %></td>
+    <td><%= link_to 'Show', job %></td>
+    <td><%= link_to 'Edit', edit_job_path(job) %></td>
+    <td><%= link_to 'Destroy', job, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New job', new_job_path %>

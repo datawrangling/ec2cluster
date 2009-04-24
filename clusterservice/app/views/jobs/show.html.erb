@@ -1,0 +1,158 @@
+<p>
+  <b>Name:</b>
+  <%=h @job.name %>
+</p>
+
+<p>
+  <b>Description:</b>
+  <%=h @job.description %>
+</p>
+
+<p>
+  <b>User:</b>
+  <%=h @job.user_id %>
+</p>
+
+<p>
+  <b>Instance type:</b>
+  <%=h @job.instance_type %>
+</p>
+
+<p>
+  <b>Number of instances:</b>
+  <%=h @job.number_of_instances %>
+</p>
+
+<p>
+  <b>Availability zone:</b>
+  <%=h @job.availability_zone %>
+</p>
+
+<p>
+  <b>Input files:</b>
+  <%=h @job.input_files %>
+</p>
+
+<p>
+  <b>Commands:</b>
+  <%=h @job.commands %>
+</p>
+
+<p>
+  <b>Output path:</b>
+  <%=h @job.output_path %>
+</p>
+
+<p>
+  <b>Output files:</b>
+  <%=h @job.output_files %>
+</p>
+
+<p>
+  <b>Shutdown after complete:</b>
+  <%=h @job.shutdown_after_complete %>
+</p>
+
+<p>
+  <b>Master ami:</b>
+  <%=h @job.master_ami_id %>
+</p>
+
+<p>
+  <b>Worker ami:</b>
+  <%=h @job.worker_ami_id %>
+</p>
+
+<p>
+  <b>Log path:</b>
+  <%=h @job.log_path %>
+</p>
+
+<p>
+  <b>Keypair:</b>
+  <%=h @job.keypair %>
+</p>
+
+<p>
+  <b>Ebs volumes:</b>
+  <%=h @job.ebs_volumes %>
+</p>
+
+<p>
+  <b>Mpi version:</b>
+  <%=h @job.mpi_version %>
+</p>
+
+<p>
+  <b>Mpi service rest url:</b>
+  <%=h @job.mpi_service_rest_url %>
+</p>
+
+<p>
+  <b>Created at:</b>
+  <%=h @job.created_at %>
+</p>
+
+<p>
+  <b>Submitted at:</b>
+  <%=h @job.submitted_at %>
+</p>
+
+<p>
+  <b>Started at:</b>
+  <%=h @job.started_at %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @job.updated_at %>
+</p>
+
+<p>
+  <b>Finished at:</b>
+  <%=h @job.finished_at %>
+</p>
+
+<p>
+  <b>State:</b>
+  <%=h @job.state %>
+</p>
+
+<p>
+  <b>Progress:</b>
+  <%=h @job.progress %>
+</p>
+
+<p>
+  <b>Error message:</b>
+  <%=h @job.error_message %>
+</p>
+
+<p>
+  <b>Master security group:</b>
+  <%=h @job.master_security_group %>
+</p>
+
+<p>
+  <b>Worker security group:</b>
+  <%=h @job.worker_security_group %>
+</p>
+
+<p>
+  <b>Master instance:</b>
+  <%=h @job.master_instance_id %>
+</p>
+
+<p>
+  <b>Master hostname:</b>
+  <%=h @job.master_hostname %>
+</p>
+
+<p>
+  <b>Master public hostname:</b>
+  <%=h @job.master_public_hostname %>
+</p>
+
+
+<%= link_to 'Edit', edit_job_path(@job) %> |
+<%= link_to 'Back', jobs_path %>
