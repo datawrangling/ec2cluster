@@ -9,7 +9,7 @@
   </p>
   <p>
     <%= f.label :description %><br />
-    <%= f.text_area :description, :cols => 40, :rows => 2 %>
+    <%= f.text_area :description, :cols => 90, :rows => 4 %>
   </p>
   <p>
     <%= f.label :user_id %><br />
@@ -17,7 +17,7 @@
   </p>
   <p>
     <%= f.label :instance_type %><br />
-    <%= f.text_field :instance_type %>
+    <%= f.text_field :instance_type, :value => "c1.medium" %>
   </p>
   <p>
     <%= f.label :number_of_instances %><br />
@@ -25,15 +25,15 @@
   </p>
   <p>
     <%= f.label :availability_zone %><br />
-    <%= f.text_field :availability_zone %>
+    <%= f.text_field :availability_zone, :value => "us-east-1c" %>
   </p>
   <p>
     <%= f.label :input_files %><br />
-    <%= f.text_area :input_files, :cols => 40, :rows => 2 %>
+    <%= f.text_area :input_files, :cols => 90, :rows => 4 %>
   </p>
   <p>
     <%= f.label :commands %><br />
-    <%= f.text_area :commands, :cols => 40, :rows => 2 %>
+    <%= f.text_area :commands, :cols => 90, :rows => 4 %>
   </p>
   <p>
     <%= f.label :output_path %><br />
@@ -41,7 +41,7 @@
   </p>
   <p>
     <%= f.label :output_files %><br />
-    <%= f.text_area :output_files, :cols => 40, :rows => 2 %>
+    <%= f.text_area :output_files, :cols => 90, :rows => 4 %>
   </p>
   <p>
     <%= f.label :shutdown_after_complete %><br />
@@ -49,12 +49,19 @@
   </p>
   <p>
     <%= f.label :master_ami_id %><br />
-    <%= f.text_field :master_ami_id %>
+    <%= f.text_field :master_ami_id, :value => "ami-71fd1a18" %>
   </p>
   <p>
     <%= f.label :worker_ami_id %><br />
-    <%= f.text_field :worker_ami_id %>
+    <%= f.text_field :worker_ami_id, :value => "ami-71fd1a18"  %>
   </p>
+  
+  <br />
+  <hr />
+  <p>
+  <h2>Optional Parameters</h2></p>
+  </p>
+  
   <p>
     <%= f.label :log_path %><br />
     <%= f.text_field :log_path %>
@@ -65,7 +72,7 @@
   </p>
   <p>
     <%= f.label :ebs_volumes %><br />
-    <%= f.text_area :ebs_volumes, :cols => 40, :rows => 2 %>
+    <%= f.text_area :ebs_volumes, :cols => 90, :rows => 4 %>
   </p>
   <p>
     <%= f.label :mpi_version %><br />

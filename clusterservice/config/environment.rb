@@ -22,6 +22,7 @@ Rails::Initializer.run do |config|
   config.gem 'mislav-will_paginate', :version => '~> 2.3.8', :lib => 'will_paginate', 
     :source => 'http://gems.github.com'
 
+  config.gem 'rubyist-aasm', :version => '~> 2.0.5', :lib => 'aasm', :source => "http://gems.github.com"
   
 
   # Only load the plugins named here, in the order given (default is alphabetical).
@@ -37,7 +38,7 @@ Rails::Initializer.run do |config|
 
   # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
   # Run "rake -D time" for a list of tasks for finding time zone names.
-  config.time_zone = 'UTC'
+  config.time_zone = 'Eastern Time (US & Canada)'
 
   # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
   # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}')]

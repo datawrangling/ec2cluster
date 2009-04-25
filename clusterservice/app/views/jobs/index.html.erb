@@ -3,7 +3,6 @@
 <table>
   <tr>
     <th>Name</th>
-    <th>Description</th>
     <th>Instance type</th>
     <th>Number of instances</th>
     <th>Output path</th>
@@ -19,7 +18,6 @@
 <% @jobs.each do |job| %>
   <tr>
     <td><%=h job.name %></td>
-    <td><%=h job.description %></td>
     <td><%=h job.instance_type %></td>
     <td><%=h job.number_of_instances %></td>
     <td><%=h job.output_path %></td>

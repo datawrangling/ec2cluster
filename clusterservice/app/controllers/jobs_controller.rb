@@ -47,7 +47,9 @@ class JobsController < ApplicationController
 
     respond_to do |format|
       if @job.save
-        flash[:notice] = 'Job was successfully created.'
+        @job.launch_cluster
+        flash[:notice] = 'Job was successfully submitted.'        
+        
         format.html { redirect_to(@job) }
         format.xml  { render :xml => @job, :status => :created, :location => @job }
         format.json  { render :json => @job, :status => :created, :location => @job }        
