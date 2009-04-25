@@ -9,7 +9,7 @@
   </p>
   <p>
     <%= f.label :description %><br />
-    <%= f.text_area :description %>
+    <%= f.text_area :description, :cols => 40, :rows => 2 %>
   </p>
   <p>
     <%= f.label :user_id %><br />
@@ -29,11 +29,11 @@
   </p>
   <p>
     <%= f.label :input_files %><br />
-    <%= f.text_area :input_files %>
+    <%= f.text_area :input_files, :cols => 40, :rows => 2 %>
   </p>
   <p>
     <%= f.label :commands %><br />
-    <%= f.text_area :commands %>
+    <%= f.text_area :commands, :cols => 40, :rows => 2 %>
   </p>
   <p>
     <%= f.label :output_path %><br />
@@ -41,7 +41,7 @@
   </p>
   <p>
     <%= f.label :output_files %><br />
-    <%= f.text_area :output_files %>
+    <%= f.text_area :output_files, :cols => 40, :rows => 2 %>
   </p>
   <p>
     <%= f.label :shutdown_after_complete %><br />
@@ -65,67 +65,11 @@
   </p>
   <p>
     <%= f.label :ebs_volumes %><br />
-    <%= f.text_area :ebs_volumes %>
+    <%= f.text_area :ebs_volumes, :cols => 40, :rows => 2 %>
   </p>
   <p>
     <%= f.label :mpi_version %><br />
     <%= f.text_field :mpi_version %>
-  </p>
-  <p>
-    <%= f.label :mpi_service_rest_url %><br />
-    <%= f.text_field :mpi_service_rest_url %>
-  </p>
-  <p>
-    <%= f.label :created_at %><br />
-    <%= f.datetime_select :created_at %>
-  </p>
-  <p>
-    <%= f.label :submitted_at %><br />
-    <%= f.datetime_select :submitted_at %>
-  </p>
-  <p>
-    <%= f.label :started_at %><br />
-    <%= f.datetime_select :started_at %>
-  </p>
-  <p>
-    <%= f.label :updated_at %><br />
-    <%= f.datetime_select :updated_at %>
-  </p>
-  <p>
-    <%= f.label :finished_at %><br />
-    <%= f.datetime_select :finished_at %>
-  </p>
-  <p>
-    <%= f.label :state %><br />
-    <%= f.text_field :state %>
-  </p>
-  <p>
-    <%= f.label :progress %><br />
-    <%= f.text_field :progress %>
-  </p>
-  <p>
-    <%= f.label :error_message %><br />
-    <%= f.text_area :error_message %>
-  </p>
-  <p>
-    <%= f.label :master_security_group %><br />
-    <%= f.text_field :master_security_group %>
-  </p>
-  <p>
-    <%= f.label :worker_security_group %><br />
-    <%= f.text_field :worker_security_group %>
-  </p>
-  <p>
-    <%= f.label :master_instance_id %><br />
-    <%= f.text_field :master_instance_id %>
-  </p>
-  <p>
-    <%= f.label :master_hostname %><br />
-    <%= f.text_field :master_hostname %>
-  </p>
-  <p>
-    <%= f.label :master_public_hostname %><br />
-    <%= f.text_field :master_public_hostname %>
   </p>
   <p>
     <%= f.submit 'Create' %>
