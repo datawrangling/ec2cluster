@@ -97,31 +97,34 @@ class Job < ActiveRecord::Base
 
   def launch_cluster
     # this method is called from the controller create method
-    # after @job.save, initially the job is in a "pending" state.
-    self.initialize_job_parameters
-    self.nextstep!
-    # job state is now "launching_instances"...
-    
-    # define various cluster variables here before launching the
-    # cluster... i.e. master_security_group, worker_security_group etc...
-    # update model state for those fields..
-    
-    puts 'background cluster launch initiated...'    
-    # call method to kick off delayed_job here. 
-    # will stick in "launching_instances" state until cluster is launched and
-    # the delayed job background task calls nextstep! again.
-    # the background job will need to check the DB periodically to see if state 
-    # is cancellation_requested, in that case it will exit and let terminate_cluster clean up 
-    # in which case it will exit execution
-    ###### these should be set by at the end of the delayed_job:
-    
-    # t.string   "master_instance_id"
-    # t.string   "master_hostname"
-    # t.string   "master_public_hostname"
-    
-    # on exiting, the delayed_job  sets "submitted_at" as follows:
-    # update_attribute(:submitted_at, Time.now )
-    
+    begin      
+      # simulate long running task of launching an EC2 cluster
+      i = 0
+      while i < 20 do
+         sleep 1
+         i += 1
+      end   
+      # call method to kick off delayed_job here. 
+      # will stick in "launching_instances" state until cluster is launched and
+      # the delayed job background task calls nextstep! again.
+      # the background job will need to check the DB periodically to see if state 
+      # is cancellation_requested, in that case it will exit and let terminate_cluster clean up 
+      # in which case it will exit execution
+      ###### these should be set by at the end of the delayed_job:
+
+      # t.string   "master_instance_id"
+      # t.string   "master_hostname"
+      # t.string   "master_public_hostname"
+
+      # on exiting, the delayed_job  sets "submitted_at" as follows:
+      # update_attribute(:submitted_at, Time.now )      
+      self.nextstep!
+      # job is now in  "running_job_commands" state
+      logger.debug( 'cluster launched...' )
+    rescue Exception 
+      self.error!
+      logger.debug( 'there was an error launching the cluster...' )
+    end
   end
   
   def terminate_cluster

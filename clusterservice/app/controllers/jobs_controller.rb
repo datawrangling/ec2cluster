@@ -1,4 +1,5 @@
 class JobsController < ApplicationController
+  
   # GET /jobs
   # GET /jobs.xml
   def index
@@ -47,7 +48,13 @@ class JobsController < ApplicationController
 
     respond_to do |format|
       if @job.save
-        @job.launch_cluster
+        # after @job.save, initially the job is in a "pending" state.
+        @job.initialize_job_parameters
+        @job.nextstep!
+        logger.debug( 'initiating background cluster launch...' )    
+        # job state is now "launching_instances"...        
+        # @job.launch_cluster
+        Delayed::Job.enqueue ClusterLaunchJob.new(@job)
         flash[:notice] = 'Job was successfully submitted.'        
         
         format.html { redirect_to(@job) }
