@@ -1,5 +1,8 @@
 require 'test_helper'
 
+# to run:
+# $ rake test:integration
+
 class WebserviceInteractionsTest < ActionController::IntegrationTest
   fixtures :all
 

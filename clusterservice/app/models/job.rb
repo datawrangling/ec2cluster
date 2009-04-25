@@ -43,7 +43,7 @@ class Job < ActiveRecord::Base
   attr_protected :master_instance_id, :master_hostname, :master_public_hostname
     
     
-  #### VALIDATIONS ##############  
+  #### Validations ##############  
   # These should at least be present (log_path, keypair, EBS vols are optional)
   validates_presence_of :name, :description, :commands, :input_files, :output_files, :output_path
   validates_numericality_of :user_id, :number_of_instances
@@ -98,28 +98,29 @@ class Job < ActiveRecord::Base
   def launch_cluster
     # this method is called from the controller create method
     begin      
+      
+      # TODO: the background job will need to check the DB periodically while the ec2 launch script
+      # is running to see if state = cancellation_requested, in that case it will exit and
+      # let the terminate_cluster background job clean up 
+      # periodically update the progress field with text string of number of instances launched
+            
+      # TODO: pass cluster launch script the job description record as json metadata for
+      # the masternode command service to parse and execute using parameterized launch...
+      # @message = Base64.encode64(self.to_json) 
+      # or just self.to_json    
+            
       # simulate long running task of launching an EC2 cluster
       i = 0
       while i < 20 do
          sleep 1
          i += 1
-      end   
-      # call method to kick off delayed_job here. 
-      # will stick in "launching_instances" state until cluster is launched and
-      # the delayed job background task calls nextstep! again.
-      # the background job will need to check the DB periodically to see if state 
-      # is cancellation_requested, in that case it will exit and let terminate_cluster clean up 
-      # in which case it will exit execution
-      ###### these should be set by at the end of the delayed_job:
+      end    
 
-      # t.string   "master_instance_id"
-      # t.string   "master_hostname"
-      # t.string   "master_public_hostname"
-
-      # on exiting, the delayed_job  sets "submitted_at" as follows:
-      # update_attribute(:submitted_at, Time.now )      
+      self.set_master_instance_metadata
       self.nextstep!
       # job is now in  "running_job_commands" state
+      # The job will stay in "running_job_commands" state until cluster is launched and
+      # the delayed job background task calls nextstep! again when it finishes.      
       logger.debug( 'cluster launched...' )
     rescue Exception 
       self.error!
@@ -139,24 +140,16 @@ class Job < ActiveRecord::Base
   # TODO add methods to be called by worker via rest url and custom controller actions:
   # t.string   "progress"
   # t.text     "error_message"
-
-  # # This method is called from the controller and takes care of the processing
-  # def submit
-  #   begin
-  #     submission_response = add_job_to_queue()
-  #     puts submission_response
-  #     self.submit!   
-  #   rescue Exception 
-  #     self.failed!
-  #   end    
-  # 
-  # end  
-                      
-  
+                        
 protected
-
   def set_start_time
-    update_attribute(:started_at, Time.now )  
+    # Time when the cluster has actually booted
+    update_attribute(:started_at, Time.now ) 
+  end
+      
+  def set_submit_time
+    # Time the actual command starts running on ec2  
+    update_attribute(:submitted_at, Time.now )  
   end
   
   def set_finish_time
@@ -164,6 +157,7 @@ protected
   end
 
   def set_rest_url
+    # TODO load port number from custom application settings YAML
     hostname = Socket.gethostname
     self.mpi_service_rest_url = "http://#{hostname}:3000/jobs"    
   end
@@ -174,30 +168,15 @@ protected
     update_attribute(:worker_security_group, "#{id}")
   end  
 
-########## TODO rewrite ##############
-  # # This method submits the bakcground job request
-  # def add_job_to_queue
-  #   #TODO... should this connection be opened every time?  I think there is an idle timeout, so yes for now.
-  #   #TODO: wrap this in an exception handler in case the submission totally fails using right_aws
-  #   sqs    = RightAws::SqsGen2.new(EC2PROCESSING_AWS_ACCESS_KEY_ID, EC2PROCESSING_AWS_SECRET_ACCESS_KEY)
-  #   #TODO pull the queue name from the settings file as well...
-  #   input_queue = sqs.queue(INPUT_QUEUE)
-  #   @message = Base64.encode64(self.to_json)
-  #   result = input_queue.send_message(@message)
-  #   puts self.to_json
-  # end
-  # 
-  # # This updates the stored filename with processed output location string
-  # #TODO, need methods in REST web service to update these for a given job id will changing state be enough?
-  # def set_output_filename
-  #   update_attribute(:output_file_location, "#{output_file_location}")
-  # end  
-  # 
-  # def set_error_message
-  #   update_attribute(:error_message, "#{error_message}")
-  # end
+  def set_master_instance_metadata
+    # TODO: these should be filled in with values obtained from a right_aws query 
+    # or by using parameters passed into the method obtained by parsing the 
+    # command line output of the launch script at the end of the delayed_job
+    update_attribute(:master_instance_id, 'i-495ad120' )
+    update_attribute(:master_hostname, 'domU-12-31-39-03-BD-B2.compute-1.internal' )
+    update_attribute(:master_public_hostname, 'ec2-75-101-230-51.compute-1.amazonaws.com' )
+  end  
 
-###########################################
 
   def number_of_instances_must_be_at_least_1
     errors.add(:number_of_instances, 'You need at least 1 node in your cluster') if number_of_instances < 1
