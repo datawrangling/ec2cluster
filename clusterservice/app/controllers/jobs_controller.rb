@@ -51,7 +51,7 @@ class JobsController < ApplicationController
       if @job.save
         # after @job.save, initially the job is in a "pending" state.
         @job.initialize_job_parameters
-        @job.nextstep!
+        @job.nextstep!  # pending - > launch_pending
         logger.debug( 'initiating background cluster launch...' )    
         # job state is now "launching_instances"...        
         # @job.launch_cluster

@@ -12,23 +12,23 @@ class Job < ActiveRecord::Base
   # default base 32 bit Ubuntu amis
   # see http://alestic.com/ for details
   def master_ami_id
-    self[:master_ami_id] or 'ami-71fd1a18'
+    self[:master_ami_id] or APP_CONFIG['defult_master_ami_id']
   end
   
   def worker_ami_id
-    self[:worker_ami_id] or 'ami-71fd1a18'
+    self[:worker_ami_id] or APP_CONFIG['defult_worker_ami_id']
   end  
   
   def instance_type
-    self[:instance_type] or 'c1.medium'
+    self[:instance_type] or APP_CONFIG['defult_instance_type']
   end  
   
   def availability_zone
-    self[:availability_zone] or 'us-east-1c'
+    self[:availability_zone] or APP_CONFIG['defult_availability_zone']
   end
   
   def mpi_version
-    self[:mpi_version] or 'openmpi'
+    self[:mpi_version] or APP_CONFIG['defult_mpi_version']
   end  
   
   ### Protected fields ##########
@@ -48,10 +48,10 @@ class Job < ActiveRecord::Base
   validates_presence_of :name, :description, :commands, :input_files, :output_files, :output_path
   validates_numericality_of :user_id, :number_of_instances
   # these should be in the set of valid Amazon EC2 instance types...
-  validates_inclusion_of :instance_type, :in => %w( m1.small m1.large m1.xlarge c1.medium c1.xlarge), :message => "instance type {{value}} is not an allowed EC2 instance type"
+  validates_inclusion_of :instance_type, :in => %w( m1.small m1.large m1.xlarge c1.medium c1.xlarge), :message => "instance type {{value}} is not an allowed EC2 instance type, must be in: m1.small m1.large m1.xlarge c1.medium c1.xlarge"
   validate :number_of_instances_must_be_at_least_1
   # TODO, these vary by EC2 account, check set using right_aws
-  validates_inclusion_of :availability_zone, :in => %w( us-east-1a us-east-1b us-east-1c), :message => "availability zone {{value}} is not an allowed EC2 availability zone"  
+  validates_inclusion_of :availability_zone, :in => %w( us-east-1a us-east-1b us-east-1c), :message => "availability zone {{value}} is not an allowed EC2 availability zone, must be in: us-east-1a us-east-1b us-east-1c"  
   # TODO- make this a check against EC2 api describe-images with right_aws
   validates_format_of [:worker_ami_id, :master_ami_id], 
                       :with => %r{^ami-}i,
@@ -61,8 +61,10 @@ class Job < ActiveRecord::Base
                        
   aasm_column :state
   aasm_initial_state :pending
-  aasm_state :pending   
+  aasm_state :pending
+  aasm_state :launch_pending     
   aasm_state :launching_instances
+  aasm_state :configuring_cluster
   aasm_state :running, :enter => :set_start_time # instances launched
   aasm_state :terminating_instances, :enter => :terminate_cluster # kick off background task
   aasm_state :complete, :enter => :set_finish_time #instances terminated
@@ -72,8 +74,10 @@ class Job < ActiveRecord::Base
   aasm_state :failed, :enter => :set_finish_time #instances terminated
   
   aasm_event :nextstep do
-    transitions :to => :launching_instances, :from => [:pending]  
-    transitions :to => :running, :from => [:launching_instances]  
+    transitions :to => :launch_pending, :from => [:pending]     
+    transitions :to => :launching_instances, :from => [:launch_pending]  
+    transitions :to => :configuring_cluster, :from => [:launching_instances] 
+    transitions :to => :running, :from => [:configuring_cluster]       
     transitions :to => :terminating_instances, :from => [:running]
     transitions :to => :complete, :from => [:terminating_instances]
     transitions :to => :cancelled, :from => [:cancellation_requested]
@@ -81,11 +85,13 @@ class Job < ActiveRecord::Base
   end  
   
   aasm_event :cancel do
-    transitions :to => :cancellation_requested, :from => [:pending, :launching_instances, :running]
+    transitions :to => :cancellation_requested, :from => [:pending, :launch_pending, :launching_instances,
+       :configuring_cluster, :running]
   end  
   
   aasm_event :error do
-    transitions :to => :terminating_due_to_error, :from => [:launching_instances, :running]
+    transitions :to => :terminating_due_to_error, :from => [:launch_pending, :launching_instances,
+       :configuring_cluster, :running]
   end  
 
 
@@ -98,7 +104,7 @@ class Job < ActiveRecord::Base
   def launch_cluster
     # this method is called from the controller create method
     begin      
-      
+      self.nextstep! # launch_pending -> launching_instances
       # TODO: the background job will need to check the DB periodically while the ec2 launch script
       # is running to see if state = cancellation_requested, in that case it will exit and
       # let the terminate_cluster background job clean up 
@@ -112,9 +118,7 @@ class Job < ActiveRecord::Base
       #use right_aws to launch nstances
       @ec2   = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                   APP_CONFIG['aws_secret_access_key'])
-      
-      
-            
+                
       # simulate long running task of launching an EC2 cluster
       i = 0
       while i < 20 do
@@ -123,14 +127,17 @@ class Job < ActiveRecord::Base
       end    
 
       self.set_master_instance_metadata
-      self.nextstep!
-      # job is now in  "running" state
-      # The job will stay in "running" state until cluster is launched and
-      # the delayed job background task calls nextstep! again when it finishes.      
-      logger.debug( 'cluster launched...' )
+      self.nextstep!  # launching_instances -> configuring_cluster
+      # job is now in  "configuring_cluster" state.... 
+      # The job will stay in "configuring_cluster" state until cluster is set up (NFS etc)
+      # and the Master Node reports back that it is running via the custom action...
+      # the job will stay in a running state until the master node reports back again
+      # to the REST api, then the state will become "terminating_instances"... and the custom action
+      # "terminate" is called.     
+      
     rescue Exception 
-      self.error!
-      logger.debug( 'there was an error launching the cluster...' )
+      self.error! # launching_instances -> terminating_due_to_error
+      # do something with error...
     end
   end
   
@@ -166,9 +173,9 @@ protected
   end
 
   def set_rest_url
-    # TODO load port number from custom application settings YAML
     hostname = Socket.gethostname
-    self.mpi_service_rest_url = "http://#{hostname}:3000/jobs"    
+    port = APP_CONFIG['rails_application_port']
+    self.mpi_service_rest_url = "http://#{hostname}:#{port}/"    
   end
   
   def set_security_groups  

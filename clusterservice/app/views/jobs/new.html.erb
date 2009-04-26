@@ -21,7 +21,7 @@
   </p>
   <p>
     <%= f.label :instance_type %><br />
-    <%= f.text_field :instance_type, :value => "c1.medium" %>
+    <%= f.text_field :instance_type, :value => APP_CONFIG['default_instance_type'] %>
   </p>
   <p>
     <%= f.label :number_of_instances %> <i>(integer)</i><br />
@@ -29,7 +29,7 @@
   </p>
   <p>
     <%= f.label :availability_zone %><br />
-    <%= f.text_field :availability_zone, :value => "us-east-1c" %>
+    <%= f.text_field :availability_zone, :value => APP_CONFIG['default_availability_zone'] %>
   </p>
   <p>
     <%= f.label :input_files %> <i>(s3://foo/mpi.bin s3://foo/data/ s3://foo/script.sh)</i><br />
@@ -78,11 +78,11 @@
   </p>
   <p>
     <%= f.label :master_ami_id %><br />
-    <%= f.text_field :master_ami_id, :value => "ami-71fd1a18" %>
+    <%= f.text_field :master_ami_id, :value => APP_CONFIG['default_master_ami_id'] %>
   </p>
   <p>
     <%= f.label :worker_ami_id %><br />
-    <%= f.text_field :worker_ami_id, :value => "ami-71fd1a18"  %>
+    <%= f.text_field :worker_ami_id, :value => APP_CONFIG['default_worker_ami_id']  %>
   </p>
   
 
