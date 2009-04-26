@@ -63,7 +63,7 @@ class Job < ActiveRecord::Base
   aasm_initial_state :pending
   aasm_state :pending   
   aasm_state :launching_instances
-  aasm_state :running_job_commands, :enter => :set_start_time # instances launched
+  aasm_state :running, :enter => :set_start_time # instances launched
   aasm_state :terminating_instances, :enter => :terminate_cluster # kick off background task
   aasm_state :complete, :enter => :set_finish_time #instances terminated
   aasm_state :cancellation_requested, :enter => :terminate_cluster # kick off background task
@@ -73,19 +73,19 @@ class Job < ActiveRecord::Base
   
   aasm_event :nextstep do
     transitions :to => :launching_instances, :from => [:pending]  
-    transitions :to => :running_job_commands, :from => [:launching_instances]  
-    transitions :to => :terminating_instances, :from => [:running_job_commands]
+    transitions :to => :running, :from => [:launching_instances]  
+    transitions :to => :terminating_instances, :from => [:running]
     transitions :to => :complete, :from => [:terminating_instances]
     transitions :to => :cancelled, :from => [:cancellation_requested]
     transitions :to => :failed, :from => [:terminating_due_to_error]       
   end  
   
   aasm_event :cancel do
-    transitions :to => :cancellation_requested, :from => [:pending, :launching_instances, :running_job_commands]
+    transitions :to => :cancellation_requested, :from => [:pending, :launching_instances, :running]
   end  
   
   aasm_event :error do
-    transitions :to => :terminating_due_to_error, :from => [:launching_instances, :running_job_commands]
+    transitions :to => :terminating_due_to_error, :from => [:launching_instances, :running]
   end  
 
 
@@ -118,8 +118,8 @@ class Job < ActiveRecord::Base
 
       self.set_master_instance_metadata
       self.nextstep!
-      # job is now in  "running_job_commands" state
-      # The job will stay in "running_job_commands" state until cluster is launched and
+      # job is now in  "running" state
+      # The job will stay in "running" state until cluster is launched and
       # the delayed job background task calls nextstep! again when it finishes.      
       logger.debug( 'cluster launched...' )
     rescue Exception 

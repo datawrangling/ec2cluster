@@ -1,0 +1,13 @@
+development:
+  aws_secret_access_key: VVHJBJHVBIBIUBU
+  aws_access_key_id: BIBUBIBUOOBUB
+
+test:
+  aws_secret_access_key: VVHJBJHVBIBIUBU
+  aws_access_key_id: BIBUBIBUOOBUB
+
+
+production:
+  aws_secret_access_key: VVHJBJHVBIBIUBU
+  aws_access_key_id: BIBUBIBUOOBUB
+
