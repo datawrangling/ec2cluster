@@ -1,4 +1,6 @@
-<h1>Listing jobs</h1>
+<h1>ElasticWulf Jobs</h1>
+
+>> Submit a <%= link_to 'New job', new_job_path %>
 
 <table>
   <tr>
@@ -30,8 +32,43 @@
 </table>
 
 <%= will_paginate @jobs %>
-
-
 <br />
 
-<%= link_to 'New job', new_job_path %>
+<h2>How to use the REST API with JSON</h2>
+<h3>Submit a new job request</h3>
+To submit a new job via a json request, you can post a JSON request to the REST api:
+<pre>
+post '/jobs/create',
+  '{"job": {"name": "My Json MPI job", "description": "fdsfdfdsf", "user_id": 2,
+   "number_of_instances": 12, "instance_type": "c1.medium", 
+   "input_files": "s3://mybucket/input/genome.txt s3://myfastabucket/somedata.fasta", 
+   "commands": "bash runtandem.sh", "output_files": "myoutput.txt",
+   "output_path": "S3://myoutputbucket/myrunsfolder"}}',
+  {'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+</pre>
+
+<h3>Checking on job status</h3>
+To submit a new job via a json request, you can post a JSON request to the REST api:
+<pre>
+post '/jobs/create',
+  '{"job": {"name": "My Json MPI job", "description": "fdsfdfdsf", "user_id": 2,
+   "number_of_instances": 12, "instance_type": "c1.medium", 
+   "input_files": "s3://mybucket/input/genome.txt s3://myfastabucket/somedata.fasta", 
+   "commands": "bash runtandem.sh", "output_files": "myoutput.txt",
+   "output_path": "S3://myoutputbucket/myrunsfolder"}}',
+  {'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+</pre>
+
+<h3>Cancel a job request and shutdown the EC2 cluster</h3>
+
+<pre>
+post '/jobs/create',
+  '{"job": {"name": "My Json MPI job", "description": "fdsfdfdsf", "user_id": 2,
+   "number_of_instances": 12, "instance_type": "c1.medium", 
+   "input_files": "s3://mybucket/input/genome.txt s3://myfastabucket/somedata.fasta", 
+   "commands": "bash runtandem.sh", "output_files": "myoutput.txt",
+   "output_path": "S3://myoutputbucket/myrunsfolder"}}',
+  {'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+</pre>
+
+

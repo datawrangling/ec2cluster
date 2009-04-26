@@ -2,10 +2,12 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
   <head>
-  <title>Jobs: <%= controller.action_name %></title>
+  <title>ElasticWulf MPI Cluster Manager >> Jobs: <%= controller.action_name %></title>
     <%= stylesheet_link_tag 'green' %>
     <%= yield(:head) %>
   </head>
+  <div class="logo"><a href="http://www.datawrangling.com" title="DataWrangling.com"><img src="images/datawrangling_logo_white.png" alt="Data Wrangling" /></a></div>
+  
   <body>
     <div id="container">
       <%- flash.each do |name, msg| -%>
@@ -19,4 +21,5 @@
       <%= yield %>
     </div>
   </body>
+  
 </html>

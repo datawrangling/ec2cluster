@@ -65,7 +65,8 @@ class Job < ActiveRecord::Base
   aasm_state :launch_pending     
   aasm_state :launching_instances
   aasm_state :configuring_cluster
-  aasm_state :running, :enter => :set_start_time # instances launched
+  aasm_state :waiting_for_jobs
+  aasm_state :running_job, :enter => :set_start_time # instances launched
   aasm_state :terminating_instances, :enter => :terminate_cluster # kick off background task
   aasm_state :complete, :enter => :set_finish_time #instances terminated
   aasm_state :cancellation_requested, :enter => :terminate_cluster # kick off background task
@@ -77,21 +78,29 @@ class Job < ActiveRecord::Base
     transitions :to => :launch_pending, :from => [:pending]     
     transitions :to => :launching_instances, :from => [:launch_pending]  
     transitions :to => :configuring_cluster, :from => [:launching_instances] 
-    transitions :to => :running, :from => [:configuring_cluster]       
-    transitions :to => :terminating_instances, :from => [:running]
+    transitions :to => :running_job, :from => [:configuring_cluster]
+    transitions :to => :running_job, :from => [:waiting_for_jobs]    
+    transitions :to => :terminating_instances, :from => [:running_job]
     transitions :to => :complete, :from => [:terminating_instances]
     transitions :to => :cancelled, :from => [:cancellation_requested]
     transitions :to => :failed, :from => [:terminating_due_to_error]       
   end  
   
+  # TODO: if shutdown_after_complete is false, The master node service will
+  # call this action instead of nextstep... not implemented yet so cluster always
+  # shuts down after job completes.
+  aasm_event :wait do
+    transitions :to => :waiting_for_jobs, :from => [:running_job]
+  end  
+  
   aasm_event :cancel do
     transitions :to => :cancellation_requested, :from => [:pending, :launch_pending, :launching_instances,
-       :configuring_cluster, :running]
+       :configuring_cluster, :running_job]
   end  
   
   aasm_event :error do
     transitions :to => :terminating_due_to_error, :from => [:launch_pending, :launching_instances,
-       :configuring_cluster, :running]
+       :configuring_cluster, :running_job]
   end  
 
 
@@ -131,7 +140,7 @@ class Job < ActiveRecord::Base
       # job is now in  "configuring_cluster" state.... 
       # The job will stay in "configuring_cluster" state until cluster is set up (NFS etc)
       # and the Master Node reports back that it is running via the custom action...
-      # the job will stay in a running state until the master node reports back again
+      # the job will stay in a running_job state until the master node reports back again
       # to the REST api, then the state will become "terminating_instances"... and the custom action
       # "terminate" is called.     
       
