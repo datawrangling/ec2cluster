@@ -108,6 +108,12 @@ class Job < ActiveRecord::Base
       # the masternode command service to parse and execute using parameterized launch...
       # @message = Base64.encode64(self.to_json) 
       # or just self.to_json    
+      
+      #use right_aws to launch nstances
+      @ec2   = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
+                                  APP_CONFIG['aws_secret_access_key'])
+      
+      
             
       # simulate long running task of launching an EC2 cluster
       i = 0
