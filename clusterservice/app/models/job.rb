@@ -36,7 +36,7 @@ class Job < ActiveRecord::Base
   attr_protected :created_at, :updated_at
   
   # populated by job model itself (in state_machine blocks)
-  attr_protected :mpi_service_rest_url, :submitted_at, :started_at, :finished_at
+  attr_protected :mpi_service_rest_url, :submitted_at, :started_at, :finished_at, :cancelled_at, :failed_at
   
   # populated by ClusterJob worker daemon
   attr_protected :master_security_group, :worker_security_group
@@ -180,6 +180,14 @@ protected
   def set_finish_time
     update_attribute(:finished_at, Time.now )    
   end
+  
+  def set_cancelled_time
+    update_attribute(:cancelled_at, Time.now )    
+  end
+  
+  def set_failed_time
+    update_attribute(:failed_at, Time.now )    
+  end    
 
   def set_rest_url
     hostname = Socket.gethostname
