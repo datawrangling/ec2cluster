@@ -140,6 +140,9 @@ class Job < ActiveRecord::Base
   # TODO add methods to be called by worker via rest url and custom controller actions:
   # t.string   "progress"
   # t.text     "error_message"
+  
+  # TODO: add cancel method and corresponding routes / controller actions
+  
                         
 protected
   def set_start_time
