@@ -1,7 +1,7 @@
 <h1>ElasticWulf Jobs</h1>
 
 >> Submit a <%= link_to 'New job', new_job_path %>
-
+<BR><BR>
 <table>
   <tr>
     <th>Name</th>
@@ -30,11 +30,11 @@
   </tr>
 <% end %>
 </table>
-
+<br >
 <%= will_paginate @jobs %>
 <br />
 
-<h2>How to use the REST API with JSON</h2>
+<h2>How to use the JSON REST API</h2>
 <h3>Submit a new job request</h3>
 To submit a new job via a json request, you can post a JSON request to the REST api:
 <pre>

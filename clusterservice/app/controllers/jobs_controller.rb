@@ -88,6 +88,9 @@ class JobsController < ApplicationController
     end
   end
 
+
+
+
   # DELETE /jobs/1
   # DELETE /jobs/1.xml
   def destroy
