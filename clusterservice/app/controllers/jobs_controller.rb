@@ -1,4 +1,5 @@
 class JobsController < ApplicationController
+  layout 'green'
   
   # GET /jobs
   # GET /jobs.xml

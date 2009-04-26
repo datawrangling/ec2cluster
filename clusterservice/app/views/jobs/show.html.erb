@@ -1,3 +1,10 @@
+<%= link_to 'Edit', edit_job_path(@job) %> |
+<%= link_to 'Back', jobs_path %>
+
+<table border="0" width="100%" cellpadding="10">
+<tr>
+
+<td width="50%" valign="top">
 <p>
   <b>Name:</b>
   <%=h @job.name %>
@@ -67,11 +74,16 @@
   <b>Log path:</b>
   <%=h @job.log_path %>
 </p>
-
 <p>
   <b>Keypair:</b>
   <%=h @job.keypair %>
 </p>
+
+
+
+</td>
+
+<td width="50%" valign="top">
 
 <p>
   <b>Ebs volumes:</b>
@@ -82,7 +94,6 @@
   <b>Mpi version:</b>
   <%=h @job.mpi_version %>
 </p>
-
 <p>
   <b>Mpi service rest url:</b>
   <%=h @job.mpi_service_rest_url %>
@@ -147,7 +158,8 @@
   <b>Master public hostname:</b>
   <%=h @job.master_public_hostname %>
 </p>
+</td>
 
+</tr>
+</table>
 
-<%= link_to 'Edit', edit_job_path(@job) %> |
-<%= link_to 'Back', jobs_path %>

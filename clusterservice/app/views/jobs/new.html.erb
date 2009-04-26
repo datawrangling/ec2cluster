@@ -1,18 +1,22 @@
 <h1>New job</h1>
-
+<%= link_to 'Back', jobs_path %>
 <% form_for(@job) do |f| %>
   <%= f.error_messages %>
 
+  <table border="0" width="100%" cellpadding="10">
+  <tr>
+
+  <td width="50%" valign="top">
   <p>
     <%= f.label :name %><br />
     <%= f.text_field :name %>
   </p>
   <p>
     <%= f.label :description %><br />
-    <%= f.text_area :description, :cols => 90, :rows => 4 %>
+    <%= f.text_area :description, :cols => 40, :rows => 2 %>
   </p>
   <p>
-    <%= f.label :user_id %><br />
+    <%= f.label :user_id %> <i>(integer)</i><br />
     <%= f.text_field :user_id %>
   </p>
   <p>
@@ -20,7 +24,7 @@
     <%= f.text_field :instance_type, :value => "c1.medium" %>
   </p>
   <p>
-    <%= f.label :number_of_instances %><br />
+    <%= f.label :number_of_instances %> <i>(integer)</i><br />
     <%= f.text_field :number_of_instances %>
   </p>
   <p>
@@ -28,34 +32,9 @@
     <%= f.text_field :availability_zone, :value => "us-east-1c" %>
   </p>
   <p>
-    <%= f.label :input_files %><br />
-    <%= f.text_area :input_files, :cols => 90, :rows => 4 %>
+    <%= f.label :input_files %> <i>(s3://foo/mpi.bin s3://foo/data/ s3://foo/script.sh)</i><br />
+    <%= f.text_area :input_files, :cols => 40, :rows => 2 %>
   </p>
-  <p>
-    <%= f.label :commands %><br />
-    <%= f.text_area :commands, :cols => 90, :rows => 4 %>
-  </p>
-  <p>
-    <%= f.label :output_path %><br />
-    <%= f.text_field :output_path %>
-  </p>
-  <p>
-    <%= f.label :output_files %><br />
-    <%= f.text_area :output_files, :cols => 90, :rows => 4 %>
-  </p>
-  <p>
-    <%= f.label :shutdown_after_complete %><br />
-    <%= f.check_box :shutdown_after_complete %>
-  </p>
-  <p>
-    <%= f.label :master_ami_id %><br />
-    <%= f.text_field :master_ami_id, :value => "ami-71fd1a18" %>
-  </p>
-  <p>
-    <%= f.label :worker_ami_id %><br />
-    <%= f.text_field :worker_ami_id, :value => "ami-71fd1a18"  %>
-  </p>
-  
   <br />
   <hr />
   <p>
@@ -72,15 +51,49 @@
   </p>
   <p>
     <%= f.label :ebs_volumes %><br />
-    <%= f.text_area :ebs_volumes, :cols => 90, :rows => 4 %>
+    <%= f.text_area :ebs_volumes, :cols => 40, :rows => 2 %>
   </p>
   <p>
     <%= f.label :mpi_version %><br />
     <%= f.text_field :mpi_version %>
+  </p>  
+  </td>
+
+  <td width="50%" valign="top">
+  <p>
+    <%= f.label :commands %> <i>(bash script.sh)</i><br />
+    <%= f.text_area :commands, :cols => 40, :rows => 2 %>
   </p>
   <p>
-    <%= f.submit 'Create' %>
+    <%= f.label :output_path %> <i>(s3://mybucket/outputfolder)</i><br />
+    <%= f.text_field :output_path %>
   </p>
+  <p>
+    <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
+    <%= f.text_area :output_files, :cols => 40, :rows => 2 %>
+  </p>
+  <p>
+    <%= f.label :shutdown_after_complete %><br />
+    <%= f.check_box :shutdown_after_complete %>
+  </p>
+  <p>
+    <%= f.label :master_ami_id %><br />
+    <%= f.text_field :master_ami_id, :value => "ami-71fd1a18" %>
+  </p>
+  <p>
+    <%= f.label :worker_ami_id %><br />
+    <%= f.text_field :worker_ami_id, :value => "ami-71fd1a18"  %>
+  </p>
+  
+
+  <p>
+    <%= f.submit 'Create' %>
+  </p>  
+  </td>
+
+  </tr>
+  </table>
+
+
 <% end %>
 
-<%= link_to 'Back', jobs_path %>
