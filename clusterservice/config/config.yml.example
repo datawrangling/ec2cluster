@@ -1,13 +1,29 @@
 development:
-  aws_secret_access_key: VVHJBJHVBIBIUBU
-  aws_access_key_id: BIBUBIBUOOBUB
+  rails_application_port: 3000
+  aws_secret_access_key: YYVUYVIUBIBI
+  aws_access_key_id: BBKBBOUjbkj/BBOUBOBJKBjbjbboubuBUB
+  default_master_ami_id: ami-71fd1a18
+  default_worker_ami_id: ami-71fd1a18
+  default_instance_type: c1.medium
+  default_availability_zone: us-east-1c
+  default_mpi_version: openmpi
 
 test:
-  aws_secret_access_key: VVHJBJHVBIBIUBU
-  aws_access_key_id: BIBUBIBUOOBUB
-
+  rails_application_port: 3000  
+  aws_secret_access_key: YYVUYVIUBIBI
+  aws_access_key_id: BBKBBOUjbkj/BBOUBOBJKBjbjbboubuBUB
+  default_master_ami_id: ami-71fd1a18
+  default_worker_ami_id: ami-71fd1a18
+  default_instance_type: c1.medium
+  default_availability_zone: us-east-1c
+  default_mpi_version: openmpi
 
 production:
-  aws_secret_access_key: VVHJBJHVBIBIUBU
-  aws_access_key_id: BIBUBIBUOOBUB
-
+  rails_application_port: 3000  
+  aws_secret_access_key: YYVUYVIUBIBI
+  aws_access_key_id: BBKBBOUjbkj/BBOUBOBJKBjbjbboubuBUB
+  default_master_ami_id: ami-71fd1a18
+  default_worker_ami_id: ami-71fd1a18
+  default_instance_type: c1.medium
+  default_availability_zone: us-east-1c
+  default_mpi_version: openmpi
