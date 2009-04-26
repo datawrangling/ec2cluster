@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090426225502) do
+ActiveRecord::Schema.define(:version => 20090426230408) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -44,7 +44,6 @@ ActiveRecord::Schema.define(:version => 20090426225502) do
     t.string   "mpi_version"
     t.string   "mpi_service_rest_url"
     t.datetime "created_at"
-    t.datetime "submitted_at"
     t.datetime "started_at"
     t.datetime "updated_at"
     t.datetime "finished_at"

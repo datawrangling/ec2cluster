@@ -36,7 +36,7 @@ class Job < ActiveRecord::Base
   attr_protected :created_at, :updated_at
   
   # populated by job model itself (in state_machine blocks)
-  attr_protected :mpi_service_rest_url, :submitted_at, :started_at, :finished_at, :cancelled_at, :failed_at
+  attr_protected :mpi_service_rest_url, :started_at, :finished_at, :cancelled_at, :failed_at
   
   # populated by ClusterJob worker daemon
   attr_protected :master_security_group, :worker_security_group
@@ -70,9 +70,9 @@ class Job < ActiveRecord::Base
   aasm_state :terminating_instances, :enter => :terminate_cluster # kick off background task
   aasm_state :complete, :enter => :set_finish_time #instances terminated
   aasm_state :cancellation_requested, :enter => :terminate_cluster # kick off background task
-  aasm_state :cancelled, :enter => :set_finish_time #instances terminated
+  aasm_state :cancelled, :enter => :set_cancelled_time #instances terminated
   aasm_state :terminating_due_to_error, :enter => :terminate_cluster # kick off background task  
-  aasm_state :failed, :enter => :set_finish_time #instances terminated
+  aasm_state :failed, :enter => :set_failed_time #instances terminated
   
   aasm_event :nextstep do
     transitions :to => :launch_pending, :from => [:pending]     
@@ -168,13 +168,8 @@ class Job < ActiveRecord::Base
                         
 protected
   def set_start_time
-    # Time when the cluster has actually booted
+    # Time when the cluster has actually booted and MPI job starts running
     update_attribute(:started_at, Time.now ) 
-  end
-      
-  def set_submit_time
-    # Time the actual command starts running on ec2  
-    update_attribute(:submitted_at, Time.now )  
   end
   
   def set_finish_time
