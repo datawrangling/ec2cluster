@@ -85,9 +85,9 @@ class Job < ActiveRecord::Base
     transitions :to => :launching_instances, :from => [:launch_pending]  
     transitions :to => :configuring_cluster, :from => [:launching_instances] 
     transitions :to => :running_job, :from => [:configuring_cluster]
-    transitions :to => :running_job, :from => [:waiting_for_jobs]  
+    transitions :to => :running_job, :from => [:waiting_for_jobs]
+    transitions :to => :shutdown_requested, :from => [:running_job]  
       
-    transitions :to => :shutdown_requested, :from => [:running_job]
     transitions :to => :shutting_down_instances, :from => [:shutdown_requested]
     transitions :to => :complete, :from => [:shutting_down_instances]
     
@@ -114,6 +114,11 @@ class Job < ActiveRecord::Base
       :waiting_for_jobs
     ]
   end  
+  
+  # aasm_event :shutdown do
+  #   transitions :to => :shutdown_requested, :from => [:running_job]
+  # end  
+  
   
   aasm_event :error do
     transitions :to => :termination_requested, 
@@ -170,11 +175,14 @@ class Job < ActiveRecord::Base
       # @message = Base64.encode64(self.to_json) 
       # or just self.to_json    
       
-      #use right_aws to launch nstances
+      ######## Initialize right_aws #########
       @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                   APP_CONFIG['aws_secret_access_key'])
-                
-      # simulate long running task of launching an EC2 cluster
+        
+        
+      ######## Launch Master Node  ##########
+      self.set_progress_message("launching master node")          
+      # simulate long running task of launching an EC2 master node
       i = 0
       while i < 20 do
          sleep 1
@@ -182,13 +190,30 @@ class Job < ActiveRecord::Base
       end    
 
       self.set_master_instance_metadata
+      
+      
+      ######## Launch Worker Nodes ##########
+      
+      if self.number_of_instances > 1
+        self.set_progress_message("launching worker nodes")          
+      
+        # simulate long running task of launching EC2 worker nodes
+        i = 0
+        while i < 20 do
+           sleep 1
+           i += 1
+        end 
+             
+      end
+      
+      self.set_progress_message("configuring cluster")      
       self.nextstep!  # launching_instances -> configuring_cluster
       # job is now in  "configuring_cluster" state.... 
       # The job will stay in "configuring_cluster" state until cluster is set up (NFS etc)
       # and the Master Node reports back that it is running via the custom action...
-      # the job will stay in a running_job state until the master node reports back again
-      # to the REST api, then the state will become "terminating_instances"... and the custom action
-      # "terminate" is called.     
+      # then the job will stay in a "running_job" state until the master node reports back again
+      # to the REST api, then the state will become "shutdown_requested"... and the custom action
+      # "cancel" is called.     
       
     rescue Exception 
       self.error! # launching_instances -> terminating_due_to_error
@@ -200,6 +225,7 @@ class Job < ActiveRecord::Base
   def terminate_cluster_later
     # push cluster termination off to background using delayed_job
     self.send_later(:terminate_cluster)
+    self.set_progress_message("sent shutdown request")     
   end
  
   
@@ -210,22 +236,31 @@ class Job < ActiveRecord::Base
     
     puts 'background cluster shutdown initiated...'  
   
-    #use right_aws to terminate instances
+    ######## Initialize right_aws #########
     @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                 APP_CONFIG['aws_secret_access_key'])  
   
+    # Find nodes belonging to cluster
+    
+    # Terminate cluster nodes
+    self.set_progress_message("terminating cluster nodes") 
+  
+    # Loop until all nodes are terminated...
+  
     # simulate long running task of shutting down an EC2 cluster
+
     i = 0
     while i < 20 do
        sleep 1
        i += 1
     end    
   
-    # call method to kick off delayed_job here. 
-    # will stick in entry state until cluster is terminated and
-    # the delayed job background task calls nextstep! again.
+    # Nodes are now terminated, delete associated EC2 security groups:
+    
     
     self.nextstep! # cancelling_job -> cancelled
+    self.set_progress_message("all cluster nodes terminated") 
+    
   end  
   
   # TODO add methods to be called by worker via rest url and custom controller actions:
@@ -237,33 +272,47 @@ class Job < ActiveRecord::Base
 protected
 
 
+  def set_progress_message(message)
+    update_attribute(:progress, message )
+    self.save 
+  end
+
   def set_start_time
     # Time when the cluster has actually booted and MPI job starts running
-    update_attribute(:started_at, Time.now ) 
+    update_attribute(:started_at, Time.now )
+    self.set_progress_message("fetching input files from S3")
+    # self.set_progress_message("running job commands")
+    # self.set_progress_message("copying output files to S3")            
+    self.save 
   end
   
   def set_finish_time
-    update_attribute(:finished_at, Time.now )    
+    update_attribute(:finished_at, Time.now )
+    self.save    
   end
   
   def set_cancelled_time
-    update_attribute(:cancelled_at, Time.now )    
+    update_attribute(:cancelled_at, Time.now )
+    self.save    
   end
   
   def set_failed_time
-    update_attribute(:failed_at, Time.now )    
+    update_attribute(:failed_at, Time.now )
+    self.save    
   end    
 
   def set_rest_url
     hostname = Socket.gethostname
     port = APP_CONFIG['rails_application_port']
-    self.mpi_service_rest_url = "http://#{hostname}:#{port}/"    
+    self.mpi_service_rest_url = "http://#{hostname}:#{port}/"
+    self.save        
   end
   
   def set_security_groups  
     # Same as Hadoop EC2 conventions...
     update_attribute(:master_security_group, "#{id}-master")
     update_attribute(:worker_security_group, "#{id}")
+    self.save    
   end  
 
   def set_master_instance_metadata
@@ -273,6 +322,7 @@ protected
     update_attribute(:master_instance_id, 'i-495ad120' )
     update_attribute(:master_hostname, 'domU-12-31-39-03-BD-B2.compute-1.internal' )
     update_attribute(:master_public_hostname, 'ec2-75-101-230-51.compute-1.amazonaws.com' )
+    self.save
   end  
 
 

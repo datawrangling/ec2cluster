@@ -90,6 +90,21 @@ class JobsController < ApplicationController
   end
 
 
+  # DELETE /jobs/1
+  # DELETE /jobs/1.xml
+  def destroy
+    @job = Job.find(params[:id])
+    @job.destroy
+
+    respond_to do |format|
+      format.html { redirect_to(jobs_url) }
+      format.xml  { head :ok }
+      format.json  { head :ok }
+    end
+  end
+  
+#### Custom Actions #########  
+  
   # PUT /jobs/1/cancel
   def cancel
     @job = Job.find(params[:id])
@@ -105,18 +120,25 @@ class JobsController < ApplicationController
       format.json  { render :json => @job }
     end
   end
-
-
-  # DELETE /jobs/1
-  # DELETE /jobs/1.xml
-  def destroy
+  
+  
+  # PUT /jobs/1/nextstep
+  def nextstep
+    # called remotely by the running job cluster on EC2
+    # Transistions job to next natural step in workflow,
+    # i.e. "configuring_cluster" -> "running_job"
     @job = Job.find(params[:id])
-    @job.destroy
+    logger.debug( 'triggering next job step' )    
+    @job.nextstep!
+    flash[:notice] = 'triggering next job step..'
+    logger.debug( 'next job step transition triggered' ) 
 
     respond_to do |format|
       format.html { redirect_to(jobs_url) }
-      format.xml  { head :ok }
-      format.json  { head :ok }
+      format.xml  { render :xml => @job }
+      format.json  { render :json => @job }
     end
-  end
+  end  
+  
+  
 end
