@@ -67,11 +67,17 @@ class Job < ActiveRecord::Base
   aasm_state :configuring_cluster
   aasm_state :waiting_for_jobs
   aasm_state :running_job, :enter => :set_start_time # instances launched
-  aasm_state :terminating_instances, :enter => :terminate_cluster # kick off background task
+  
+  aasm_state :shutdown_requested, :enter => :terminate_cluster_later
+  aasm_state :shutting_down_instances
   aasm_state :complete, :enter => :set_finish_time #instances terminated
-  aasm_state :cancellation_requested, :enter => :terminate_cluster # kick off background task
+  
+  aasm_state :cancellation_requested, :enter => :terminate_cluster_later
+  aasm_state :cancelling_job
   aasm_state :cancelled, :enter => :set_cancelled_time #instances terminated
-  aasm_state :terminating_due_to_error, :enter => :terminate_cluster # kick off background task  
+  
+  aasm_state :termination_requested, :enter => :terminate_cluster_later
+  aasm_state :terminating_job     
   aasm_state :failed, :enter => :set_failed_time #instances terminated
   
   aasm_event :nextstep do
@@ -79,11 +85,18 @@ class Job < ActiveRecord::Base
     transitions :to => :launching_instances, :from => [:launch_pending]  
     transitions :to => :configuring_cluster, :from => [:launching_instances] 
     transitions :to => :running_job, :from => [:configuring_cluster]
-    transitions :to => :running_job, :from => [:waiting_for_jobs]    
-    transitions :to => :terminating_instances, :from => [:running_job]
-    transitions :to => :complete, :from => [:terminating_instances]
-    transitions :to => :cancelled, :from => [:cancellation_requested]
-    transitions :to => :failed, :from => [:terminating_due_to_error]       
+    transitions :to => :running_job, :from => [:waiting_for_jobs]  
+      
+    transitions :to => :shutdown_requested, :from => [:running_job]
+    transitions :to => :shutting_down_instances, :from => [:shutdown_requested]
+    transitions :to => :complete, :from => [:shutting_down_instances]
+    
+    transitions :to => :cancelling_job, :from => [:cancellation_requested]
+    transitions :to => :cancelled, :from => [:cancelling_job]    
+    
+    transitions :to => :terminating_job, :from => [:termination_requested] 
+    transitions :to => :failed, :from => [:terminating_job]       
+          
   end  
   
   # TODO: if shutdown_after_complete is false, The master node service will
@@ -94,19 +107,53 @@ class Job < ActiveRecord::Base
   end  
   
   aasm_event :cancel do
-    transitions :to => :cancellation_requested, :from => [:pending, :launch_pending, :launching_instances,
-       :configuring_cluster, :running_job]
+    transitions :to => :cancellation_requested, 
+    :from => [
+      :pending,
+      :launch_pending, 
+      :launching_instances,
+      :configuring_cluster, 
+      :running_job, 
+      :waiting_for_jobs
+    ]
   end  
   
   aasm_event :error do
-    transitions :to => :terminating_due_to_error, :from => [:launch_pending, :launching_instances,
-       :configuring_cluster, :running_job]
+    transitions :to => :termination_requested, 
+    :from => [
+      :pending,
+      :launch_pending, 
+      :launching_instances,
+      :configuring_cluster, 
+      :running_job,
+      :waiting_for_jobs,
+      :shutdown_requested,
+      :shutting_down_instances,
+      :cancellation_requested,
+      :cancelling_job,
+      :termination_requested,
+      :terminating_job
+    ]
   end  
 
 
   def initialize_job_parameters
     self.set_rest_url
     self.set_security_groups
+  end
+
+  def is_cancellable?
+    #TODO: add active record model for job states, to hold these types of properties...
+    cancellable_states = [
+      "pending",
+      "launch_pending",
+      "launching_instances",
+      "configuring_cluster",
+      "configuring_cluster",
+      "waiting_for_jobs",
+      "running_job"
+      ]
+    return cancellable_states.include? self.state 
   end
 
 
@@ -150,23 +197,43 @@ class Job < ActiveRecord::Base
     end
   end
   
+
+  def terminate_cluster_later
+    # push cluster termination off to background using delayed_job
+    self.send_later(:terminate_cluster)
+  end
+ 
+  
   def terminate_cluster
     # prior state could be: terminating_instances, cancellation_requested, 
     # or terminating_due_to_error
+    self.nextstep! # cancellation_requested -> cancelling_job
+    
     puts 'background cluster shutdown initiated...'  
+  
+    # simulate long running task of shutting down an EC2 cluster
+    i = 0
+    while i < 20 do
+       sleep 1
+       i += 1
+    end    
+  
     # call method to kick off delayed_job here. 
     # will stick in entry state until cluster is terminated and
     # the delayed job background task calls nextstep! again.
+    
+    self.nextstep! # cancelling_job -> cancelled
   end  
   
   # TODO add methods to be called by worker via rest url and custom controller actions:
   # t.string   "progress"
   # t.text     "error_message"
-  
-  # TODO: add cancel method and corresponding routes / controller actions
-  
+    
+
                         
 protected
+
+
   def set_start_time
     # Time when the cluster has actually booted and MPI job starts running
     update_attribute(:started_at, Time.now ) 

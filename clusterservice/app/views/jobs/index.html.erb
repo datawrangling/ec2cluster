@@ -27,6 +27,7 @@
     <td><%=h job.state %></td>
     <td><%=h job.progress %></td>
     <td><%= link_to 'Show', job %></td>
+    <td><%= link_to 'Cancel', cancel_job_path(job), :method => :put if job.is_cancellable?  %></td>    
   </tr>
 <% end %>
 </table>
@@ -34,7 +35,7 @@
 <%= will_paginate @jobs %>
 <br />
 
-<h2>How to use the JSON REST API</h2>
+<h2>Making JSON requests using the REST API</h2>
 <h3>Submit a new job request</h3>
 To submit a new job via a json request, you can post a JSON request to the REST api:
 <pre>

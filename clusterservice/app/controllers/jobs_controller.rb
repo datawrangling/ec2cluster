@@ -89,6 +89,21 @@ class JobsController < ApplicationController
   end
 
 
+  # PUT /jobs/1/cancel
+  def cancel
+    @job = Job.find(params[:id])
+    logger.debug( 'initiating background cluster termination...' )    
+    @job.cancel!
+    # Delayed::Job.enqueue ClusterTerminateJob.new(@job)
+    flash[:notice] = 'Cancellation request submitted...'
+    logger.debug( 'Cancellation request recieved for Job!...' ) 
+
+    respond_to do |format|
+      format.html { redirect_to(jobs_url) }
+      format.xml  { head :ok }
+      format.json  { head :ok }
+    end
+  end
 
 
   # DELETE /jobs/1

@@ -1,5 +1,6 @@
-<%= link_to 'Edit', edit_job_path(@job) %> |
-<%= link_to 'Back', jobs_path %>
+<%= link_to 'Edit', edit_job_path(@job) %> | 
+<%= link_to 'Back', jobs_path %> |
+    <td><%= link_to 'Cancel', cancel_job_path(@job), :method => :put if @job.is_cancellable?  %></td>  
 
 <table border="0" width="100%" cellpadding="10">
 <tr>
