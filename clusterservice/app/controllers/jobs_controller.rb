@@ -1,3 +1,4 @@
+
 class JobsController < ApplicationController
   layout 'green'
   
