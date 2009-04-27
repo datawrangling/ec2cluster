@@ -50,14 +50,14 @@ class JobsController < ApplicationController
     respond_to do |format|
       if @job.save
         # after @job.save, initially the job is in a "pending" state.
-        @job.initialize_job_parameters
+        @job.initialize_job_parameters      
         @job.nextstep!  # pending - > launch_pending
         logger.debug( 'initiating background cluster launch...' )    
         # job state is now "launching_instances"...        
         # @job.launch_cluster
-        Delayed::Job.enqueue ClusterLaunchJob.new(@job)
-        flash[:notice] = 'Job was successfully submitted.'        
-        
+        Delayed::Job.enqueue ClusterLaunchJob.new(@job)   
+        flash[:notice] = 'Job was successfully submitted.'          
+
         format.html { redirect_to(@job) }
         format.xml  { render :xml => @job, :status => :created, :location => @job }
         format.json  { render :json => @job, :status => :created, :location => @job }        
@@ -100,8 +100,8 @@ class JobsController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to(jobs_url) }
-      format.xml  { head :ok }
-      format.json  { head :ok }
+      format.xml  { render :xml => @job }
+      format.json  { render :json => @job }
     end
   end
 

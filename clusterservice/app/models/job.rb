@@ -12,23 +12,23 @@ class Job < ActiveRecord::Base
   # default base 32 bit Ubuntu amis
   # see http://alestic.com/ for details
   def master_ami_id
-    self[:master_ami_id] or APP_CONFIG['defult_master_ami_id']
+    self[:master_ami_id] or APP_CONFIG['default_master_ami_id']
   end
   
   def worker_ami_id
-    self[:worker_ami_id] or APP_CONFIG['defult_worker_ami_id']
+    self[:worker_ami_id] or APP_CONFIG['default_worker_ami_id']
   end  
   
   def instance_type
-    self[:instance_type] or APP_CONFIG['defult_instance_type']
+    self[:instance_type] or APP_CONFIG['default_instance_type']
   end  
   
   def availability_zone
-    self[:availability_zone] or APP_CONFIG['defult_availability_zone']
+    self[:availability_zone] or APP_CONFIG['default_availability_zone']
   end
   
   def mpi_version
-    self[:mpi_version] or APP_CONFIG['defult_mpi_version']
+    self[:mpi_version] or APP_CONFIG['default_mpi_version']
   end  
   
   ### Protected fields ##########
@@ -109,9 +109,6 @@ class Job < ActiveRecord::Base
   aasm_event :cancel do
     transitions :to => :cancellation_requested, 
     :from => [
-      :pending,
-      :launch_pending, 
-      :launching_instances,
       :configuring_cluster, 
       :running_job, 
       :waiting_for_jobs
@@ -143,12 +140,12 @@ class Job < ActiveRecord::Base
   end
 
   def is_cancellable?
-    #TODO: add active record model for job states, to hold these types of properties...
+    # TODO: add active record model for job states, to hold these types of properties...
+    # TODO: come up with better way to handle race condition. if the job is cancelled while launch is running
+    # then both background tasks are attempting to update job state, 
+    # for now, we bypass this by only allowing cancellation from certain states...
+    # jobs in the "configuring_cluster", "running", or "waiting" states.    
     cancellable_states = [
-      "pending",
-      "launch_pending",
-      "launching_instances",
-      "configuring_cluster",
       "configuring_cluster",
       "waiting_for_jobs",
       "running_job"
@@ -159,6 +156,8 @@ class Job < ActiveRecord::Base
 
   def launch_cluster
     # this method is called from the controller create method
+    
+    puts 'background cluster launch initiated...' 
     begin      
       self.nextstep! # launch_pending -> launching_instances
       # TODO: the background job will need to check the DB periodically while the ec2 launch script
@@ -172,7 +171,7 @@ class Job < ActiveRecord::Base
       # or just self.to_json    
       
       #use right_aws to launch nstances
-      @ec2   = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
+      @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                   APP_CONFIG['aws_secret_access_key'])
                 
       # simulate long running task of launching an EC2 cluster
@@ -210,6 +209,10 @@ class Job < ActiveRecord::Base
     self.nextstep! # cancellation_requested -> cancelling_job
     
     puts 'background cluster shutdown initiated...'  
+  
+    #use right_aws to terminate instances
+    @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
+                                APP_CONFIG['aws_secret_access_key'])  
   
     # simulate long running task of shutting down an EC2 cluster
     i = 0
