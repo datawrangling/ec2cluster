@@ -162,30 +162,36 @@ class Job < ActiveRecord::Base
   def launch_cluster
     # this method is called from the controller create method
     
+    # TODO, refactor - pulling out blocks to helper methods launch_master, launch_workers etc...
+    
     puts 'background cluster launch initiated...' 
     begin      
       self.nextstep! # launch_pending -> launching_instances
-      # TODO: the background job will need to check the DB periodically while the ec2 launch script
-      # is running to see if state = cancellation_requested, in that case it will exit and
-      # let the terminate_cluster background job clean up 
-      # periodically update the progress field with text string of number of instances launched
-            
-      # TODO: pass cluster launch script the job description record as json metadata for
-      # the masternode command service to parse and execute using parameterized launch...
-      # @message = Base64.encode64(self.to_json) 
-      # or just self.to_json    
+
+      # TODO periodically update the progress field with text string of number of instances launched 
       
       ######## Initialize right_aws #########
       @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                   APP_CONFIG['aws_secret_access_key'])
         
-        
+      # create master security group
+
+      @mastergroup = self.master_security_group
+      @ec2.create_security_group(@mastergroup,'Elasticwulf-Master-Node')
+      mastergroup = @ec2.describe_security_groups([@mastergroup])[0]
+
+      
+      
       ######## Launch Master Node  ##########
+      # launch nodes in both job specific security group and default security group
+      # so that they can ping the EC2 REST server itself w/o opening firewall.
+      
       self.set_progress_message("launching master node")          
       # simulate long running task of launching an EC2 master node
       i = 0
-      while i < 20 do
-         sleep 1
+      while i < 3 do
+         sleep 10
+         # fetch instance state using right_aws and update progress message
          i += 1
       end    
 
@@ -195,12 +201,21 @@ class Job < ActiveRecord::Base
       ######## Launch Worker Nodes ##########
       
       if self.number_of_instances > 1
-        self.set_progress_message("launching worker nodes")          
+        self.set_progress_message("launching worker nodes")
+        
+        # create worker security group   
+        @workergroup = self.worker_security_group
+        @ec2.create_security_group(@workergroup,'Elasticwulf-Worker-Node')
+        workergroup = @ec2.describe_security_groups([@workergroup])[0] 
+        
+        puts workergroup      
       
         # simulate long running task of launching EC2 worker nodes
         i = 0
-        while i < 20 do
-           sleep 1
+        while i < 3 do
+           sleep 10
+           # fetch total number of launched instances and update progress
+           # when number of launched instances = num_instances, exit.
            i += 1
         end 
              
@@ -232,6 +247,9 @@ class Job < ActiveRecord::Base
   def terminate_cluster
     # prior state could be: terminating_instances, cancellation_requested, 
     # or terminating_due_to_error
+    
+    # TODO, refactor - pulling out blocks to helper methods terminate_nodes, delete_security_groups, etc
+    
     self.nextstep! # cancellation_requested -> cancelling_job
     
     puts 'background cluster shutdown initiated...'  
@@ -250,13 +268,18 @@ class Job < ActiveRecord::Base
     # simulate long running task of shutting down an EC2 cluster
 
     i = 0
-    while i < 20 do
-       sleep 1
+    while i < 3 do
+       sleep 10
+       # fetch number of terminated instances using right_aws and update progress message
+       # when number of terminated_instances = original num_instances exit
        i += 1
-    end    
+    end 
   
-    # Nodes are now terminated, delete associated EC2 security groups:
-    
+    # Nodes are now terminated, delete associated EC2 security groups: 
+    @ec2.delete_security_group(self.master_security_group)
+    if self.number_of_instances > 1
+      @ec2.delete_security_group(self.worker_security_group)
+    end
     
     self.nextstep! # cancelling_job -> cancelled
     self.set_progress_message("all cluster nodes terminated") 
