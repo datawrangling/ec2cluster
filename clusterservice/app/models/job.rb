@@ -31,6 +31,16 @@ class Job < ActiveRecord::Base
     self[:mpi_version] or APP_CONFIG['default_mpi_version']
   end  
   
+  def keypair
+    self[:keypair] or APP_CONFIG['default_keypair']
+  end    
+  
+  # TODO: add in User model and basic http autehntication, then pass in value here
+  def user_id
+    self[:user_id] or APP_CONFIG['default_user_id']
+  end  
+  
+  
   ### Protected fields ##########
   # autopopulated by rails
   attr_protected :created_at, :updated_at
@@ -46,7 +56,7 @@ class Job < ActiveRecord::Base
   #### Validations ##############  
   # These should at least be present (log_path, keypair, EBS vols are optional)
   validates_presence_of :name, :description, :commands, :input_files, :output_files, :output_path
-  validates_numericality_of :user_id, :number_of_instances
+  validates_numericality_of :number_of_instances
   # these should be in the set of valid Amazon EC2 instance types...
   validates_inclusion_of :instance_type, :in => %w( m1.small m1.large m1.xlarge c1.medium c1.xlarge), :message => "instance type {{value}} is not an allowed EC2 instance type, must be in: m1.small m1.large m1.xlarge c1.medium c1.xlarge"
   validate :number_of_instances_must_be_at_least_1
@@ -166,39 +176,43 @@ class Job < ActiveRecord::Base
     
     puts 'background cluster launch initiated...' 
     begin      
-      self.nextstep! # launch_pending -> launching_instances
-
-      # TODO periodically update the progress field with text string of number of instances launched 
-      
+      self.nextstep! # launch_pending -> launching_instances      
       ######## Initialize right_aws #########
       @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                   APP_CONFIG['aws_secret_access_key'])
-        
-      # create master security group
-
+                                  
+                                  
       @mastergroup = self.master_security_group
-      @ec2.create_security_group(@mastergroup,'Elasticwulf-Master-Node')
-      mastergroup = @ec2.describe_security_groups([@mastergroup])[0]
-
       
+      # create master security group
+      puts "Creating master security group"
+      @ec2.create_security_group(@mastergroup,'Elasticwulf-Master-Node')
+      @mastergroup = @ec2.describe_security_groups([@mastergroup])[0]
       
       ######## Launch Master Node  ##########
       # launch nodes in both job specific security group and default security group
-      # so that they can ping the EC2 REST server itself w/o opening firewall.
+      # so that they can ping the EC2 REST server itself w/o opening firewall.      
+      self.set_progress_message("launching master node")              
       
-      self.set_progress_message("launching master node")          
-      # simulate long running task of launching an EC2 master node
-      i = 0
-      while i < 3 do
-         sleep 10
-         # fetch instance state using right_aws and update progress message
-         i += 1
-      end    
+      @master_node = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=['default', self.master_security_group], key_name=self.keypair, user_data='SomeImportantUserData', addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
+      
+      @master_instance_id = @master_node[0][:aws_instance_id]
+      @master_instance_state = @master_node[0][:aws_state]
 
-      self.set_master_instance_metadata
+      # wait until instance has launched, then we can set hostname etc...        
+      while @master_instance_state != 'running'
+        @master_node = @ec2.describe_instances(@master_instance_id)
+        @master_instance_state = @master_node[0][:aws_state]
+        self.save
+        sleep 10
+      end 
+      self.set_master_instance_metadata(@master_node)
       
       
       ######## Launch Worker Nodes ##########
+      
+      # TODO periodically update the progress field with text string of number of instances launched 
+      
       
       if self.number_of_instances > 1
         self.set_progress_message("launching worker nodes")
@@ -262,6 +276,11 @@ class Job < ActiveRecord::Base
     
     # Terminate cluster nodes
     self.set_progress_message("terminating cluster nodes") 
+  
+    # TODO: fetch instance ids of all nodes
+    # for now we will just grab master...
+    # ec2.terminate_instances(['i-f222222d','i-f222222e'])
+    @ec2.terminate_instances([self.master_instance_id])
   
     # Loop until all nodes are terminated...
   
@@ -332,19 +351,20 @@ protected
   end
   
   def set_security_groups  
-    # Same as Hadoop EC2 conventions...
-    update_attribute(:master_security_group, "#{id}-master")
-    update_attribute(:worker_security_group, "#{id}")
+    # TODO- add timestamp to id...
+    timeval = Time.now.strftime('%m%d%y-%I%M%p')
+    update_attribute(:master_security_group, "#{id}-elasticwulf-master-"+timeval)
+    update_attribute(:worker_security_group, "#{id}-elasticwulf-worker-"+timeval)
     self.save    
   end  
 
-  def set_master_instance_metadata
+  def set_master_instance_metadata(master_node)
     # TODO: these should be filled in with values obtained from a right_aws query 
     # or by using parameters passed into the method obtained by parsing the 
     # command line output of the launch script at the end of the delayed_job
-    update_attribute(:master_instance_id, 'i-495ad120' )
-    update_attribute(:master_hostname, 'domU-12-31-39-03-BD-B2.compute-1.internal' )
-    update_attribute(:master_public_hostname, 'ec2-75-101-230-51.compute-1.amazonaws.com' )
+    update_attribute(:master_instance_id, master_node[0][:aws_instance_id] )
+    update_attribute(:master_hostname, master_node[0][:private_dns_name] )
+    update_attribute(:master_public_hostname,  master_node[0][:dns_name]  )
     self.save
   end  
 

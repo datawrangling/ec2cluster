@@ -1,40 +1,28 @@
-<h1>New job</h1>
-<%= link_to 'Back', jobs_path %>
+<h2>Enter Your Job Parameters</h2>
+<%= link_to 'Back', jobs_path %> 
 <% form_for(@job) do |f| %>
   <%= f.error_messages %>
 
   <table border="0" width="100%" cellpadding="10">
   <tr>
 
-  <td width="50%" valign="top">
+  <td width="40%" valign="top">
   <p>
     <%= f.label :name %><br />
-    <%= f.text_field :name %>
+    <%= f.text_field :name %> 
   </p>
   <p>
-    <%= f.label :description %><br />
-    <%= f.text_area :description, :cols => 40, :rows => 2 %>
-  </p>
-  <p>
-    <%= f.label :user_id %> <i>(integer)</i><br />
-    <%= f.text_field :user_id %>
-  </p>
-  <p>
-    <%= f.label :instance_type %><br />
-    <%= f.text_field :instance_type, :value => APP_CONFIG['default_instance_type'] %>
-  </p>
-  <p>
-    <%= f.label :number_of_instances %> <i>(integer)</i><br />
-    <%= f.text_field :number_of_instances %>
-  </p>
-  <p>
-    <%= f.label :availability_zone %><br />
-    <%= f.text_field :availability_zone, :value => APP_CONFIG['default_availability_zone'] %>
-  </p>
-  <p>
-    <%= f.label :input_files %> <i>(s3://foo/mpi.bin s3://foo/data/ s3://foo/script.sh)</i><br />
+    <%= f.label :input_files %> <i>(s3://foo/mpi.bin s3://foo/script.sh)</i><br />
     <%= f.text_area :input_files, :cols => 40, :rows => 2 %>
+  </p>  
+  <p>
+    <%= f.label :commands %> <i>(bash script.sh)</i><br />
+    <%= f.text_area :commands, :cols => 40, :rows => 2 %>
   </p>
+  <p>
+    <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
+    <%= f.text_area :output_files, :cols => 40, :rows => 2 %>
+  </p>  
   <br />
   <hr />
   <p>
@@ -46,10 +34,6 @@
     <%= f.text_field :log_path %>
   </p>
   <p>
-    <%= f.label :keypair %><br />
-    <%= f.text_field :keypair %>
-  </p>
-  <p>
     <%= f.label :ebs_volumes %><br />
     <%= f.text_area :ebs_volumes, :cols => 40, :rows => 2 %>
   </p>
@@ -58,24 +42,19 @@
     <%= f.text_field :mpi_version %>
   </p>  
   </td>
-
-  <td width="50%" valign="top">
-  <p>
-    <%= f.label :commands %> <i>(bash script.sh)</i><br />
-    <%= f.text_area :commands, :cols => 40, :rows => 2 %>
-  </p>
+  <td width="30%" valign="top">
   <p>
     <%= f.label :output_path %> <i>(s3://mybucket/outputfolder)</i><br />
     <%= f.text_field :output_path %>
   </p>
   <p>
-    <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
-    <%= f.text_area :output_files, :cols => 40, :rows => 2 %>
-  </p>
+    <%= f.label "Job Description"  %><br />
+    <%= f.text_field :description %>
+  </p>  
   <p>
-    <%= f.label :shutdown_after_complete %><br />
-    <%= f.check_box :shutdown_after_complete %>
-  </p>
+    <%= f.label :number_of_instances %> <i>(integer)</i><br />
+    <%= f.text_field :number_of_instances %>
+  </p>  
   <p>
     <%= f.label :master_ami_id %><br />
     <%= f.text_field :master_ami_id, :value => APP_CONFIG['default_master_ami_id'] %>
@@ -83,12 +62,31 @@
   <p>
     <%= f.label :worker_ami_id %><br />
     <%= f.text_field :worker_ami_id, :value => APP_CONFIG['default_worker_ami_id']  %>
-  </p>
-  
-
-  <p>
-    <%= f.submit 'Create' %>
   </p>  
+  
+  </td>
+
+
+  <td width="30%" valign="top">
+  <p>
+    <%= f.label :instance_type %><br />
+    <%= f.text_field :instance_type, :value => APP_CONFIG['default_instance_type'] %>
+  </p>
+  <p>
+    <%= f.label :availability_zone %><br />
+    <%= f.text_field :availability_zone, :value => APP_CONFIG['default_availability_zone'] %>
+  </p>
+  <p>
+    <%= f.label :keypair %> (ensure you have created this keypair)<br />
+    <%= f.text_field :keypair, :value => APP_CONFIG['default_keypair'] %>
+  </p>  
+  <p>
+    <%= f.label :shutdown_after_complete %><br />
+    <%= f.check_box :shutdown_after_complete %>
+  </p>   
+  <p>
+        <%= f.submit 'Create' %>
+  </p>      
   </td>
 
   </tr>

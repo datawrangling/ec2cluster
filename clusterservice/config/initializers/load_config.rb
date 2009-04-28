@@ -1,1 +1,3 @@
 APP_CONFIG = YAML.load_file("#{RAILS_ROOT}/config/config.yml")[RAILS_ENV]
+
+# TODO: add startup check which verfies AWS keys are valid...

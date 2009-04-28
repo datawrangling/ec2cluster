@@ -7,6 +7,8 @@ development:
   default_instance_type: m1.small
   default_availability_zone: us-east-1c
   default_mpi_version: openmpi
+  default_keypair: gsg-keypair
+  default_user_id: 1
 
 test:
   rails_application_port: 3000
@@ -17,6 +19,8 @@ test:
   default_instance_type: c1.medium
   default_availability_zone: us-east-1c
   default_mpi_version: openmpi
+  default_keypair: gsg-keypair
+  default_user_id: 1
 
 production:
   rails_application_port: 3000
@@ -27,3 +31,5 @@ production:
   default_instance_type: c1.medium
   default_availability_zone: us-east-1c
   default_mpi_version: openmpi
+  default_keypair: gsg-keypair
+  default_user_id: 1
