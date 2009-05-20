@@ -44,6 +44,6 @@ production:
   reconnect: false
   database: clusterservice_production
   pool: 5
-  username: root
-  password: 
+  username: sample
+  password: sample
   socket: /tmp/mysql.sock
