@@ -38,6 +38,7 @@ test:
   socket: /tmp/mysql.sock
 
 production:
+  host: db_primary
   adapter: mysql
   encoding: utf8
   reconnect: false
