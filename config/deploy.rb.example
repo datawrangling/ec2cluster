@@ -96,7 +96,7 @@ set :ec2onrails_config, {
 }
 
 # Paths to non versioned configuration files on deployment server
-set :nonvc_configs, ['config/config.yml', 'config/s3.yml', 'database.yml']
+set :nonvc_configs, ['config/config.yml', 'config/s3.yml', 'config/database.yml']
 
 desc "Copies non versioned configuration files after setup"
 task :copy_nonvconfig, :roles => [:app] do
