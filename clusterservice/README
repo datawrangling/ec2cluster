@@ -9,6 +9,15 @@ skom:clusterservice pskomoroch$ rake gems:install
 aws_secret_access_key: YYVUYVIUBIBI
 aws_access_key_id: BBKBBOUjbkj/BBOUBOBJKBjbjbboubuBUB
 
+Also replace the admin user name and password in that file:
+
+admin_user: REPLACE_ME
+admin_password: REPLACE_ME
+
+This application should be run under SSL and the access should be restricted to 
+only trusted application ip addresses using EC2 security group filters.  Ideally, your
+Client application is also running on EC2 in the same security group.
+
 3) Create the database
 
 skom:clusterservice pskomoroch$ rake db:create

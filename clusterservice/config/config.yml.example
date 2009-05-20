@@ -9,6 +9,8 @@ development:
   default_mpi_version: openmpi
   default_keypair: gsg-keypair
   default_user_id: 1
+  admin_user: REPLACE_ME
+  admin_password: REPLACE_ME
 
 test:
   rails_application_port: 3000
@@ -21,6 +23,8 @@ test:
   default_mpi_version: openmpi
   default_keypair: gsg-keypair
   default_user_id: 1
+  admin_user: REPLACE_ME
+  admin_password: REPLACE_ME
 
 production:
   rails_application_port: 3000
@@ -33,3 +37,5 @@ production:
   default_mpi_version: openmpi
   default_keypair: gsg-keypair
   default_user_id: 1
+  admin_user: REPLACE_ME
+  admin_password: REPLACE_ME
