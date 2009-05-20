@@ -8,9 +8,8 @@
 <br >
 <%= will_paginate @jobs, :id => 'wpjobs' %>
 <br />
-<%= periodically_call_remote(:url => {:action => :refresh, :page=> params[:page] }, :frequency => '5', :update => 'jobs_div', :method => :get) %>
-
-
+<%= periodically_call_remote(:url => {:action => :refresh, :page=> params[:page] }, :frequency => '5', :condition => "start_polling == true",
+ :update => 'jobs_div', :method => :get) %>
 
 
 <h2>Making JSON requests using the REST API</h2>

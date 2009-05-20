@@ -28,3 +28,18 @@
     </tr>
   <% end %> 
 </table>
+
+
+<% if @jobs.size.to_i > 0 %>
+  <script type="text/javascript">
+    //<![CDATA[
+      start_polling = true;
+    //]]>
+  </script>
+<% else %>
+<script type="text/javascript">
+  //<![CDATA[
+    start_polling = false;
+  //]]>
+</script>
+<% end %>
