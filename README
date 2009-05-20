@@ -1,5 +1,7 @@
 Installation Instructions (for local development)
 
+== Configuration ==
+
 1) Do the normal rails gem install dance for any missing dependencies
 
 skom:clusterservice pskomoroch$ rake gems:install 
@@ -18,12 +20,15 @@ This application should be run under SSL and the access should be restricted to
 only trusted application ip addresses using EC2 security group filters.  Ideally, your
 Client application is also running on EC2 in the same security group.
 
-3) Create the database
+
+== Running Locally ==
+
+1) Create the database
 
 skom:clusterservice pskomoroch$ rake db:create
 skom:clusterservice pskomoroch$ rake db:migrate
 
-4) Launch the rails app itself 
+2) Launch the rails app itself 
 
 skom:clusterservice pskomoroch$ script/server 
 => Booting Mongrel
@@ -31,7 +36,7 @@ skom:clusterservice pskomoroch$ script/server
 => Call with -d to detach
 => Ctrl-C to shutdown server
 
-5) Launch a background delayed_job worker
+3) Launch a background delayed_job worker
 
 skom:clusterservice pskomoroch$ rake jobs:work
 (in /Users/pskomoroch/rails_projects/elasticwulf-service/clusterservice)
@@ -42,4 +47,30 @@ background cluster shutdown initiated...
 1 jobs processed at 0.0499 j/s, 0 failed ...
 background cluster launch initiated...
 
-6) Navigate to http://localhost:3000/ to use the web UI or submit REST requests
+4) Navigate to http://localhost:3000/ to use the web UI or submit REST requests
+
+
+== Deploying to EC2 ==
+
+1) Install the ec2onrails gem as described at http://ec2onrails.rubyforge.org/:
+
+$ sudo gem install ec2onrails
+
+2) Find AMI id of the latest 32 bit ec2onrails image:
+
+$ cap ec2onrails:ami_ids
+
+3) launch an instance of the latest ec2onrails ami: 
+
+$ ec2-run-instances ami-5394733a -k gsg-keypair
+
+4) Edit deploy.rb, fill in the ec2 public address for the launched instance, something like ec2-12-xx-xx-xx.z-1.compute-1.amazonaws.com
+
+5) Deploy the app to your launched EC2 instance with Capistrano
+
+$ cap ec2onrails:setup
+$ cap deploy:cold
+
+5) Use the admin login you set in config.yml to access the dashboard from a web browser or as web service:
+
+https://ec2-12-xx-xx-xx.z-1.compute-1.amazonaws.com
