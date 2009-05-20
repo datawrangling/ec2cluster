@@ -4,7 +4,7 @@ Installation Instructions (for local development)
 
 1) Do the normal rails gem install dance for any missing dependencies
 
-skom:clusterservice pskomoroch$ rake gems:install 
+skom:elasticwulf-service pskomoroch$ rake gems:install 
 
 2) Copy /config/config.yml.example -> /config/config.yml and sub in your own AWS key and secret key
 
@@ -25,12 +25,12 @@ Client application is also running on EC2 in the same security group.
 
 1) Create the database
 
-skom:clusterservice pskomoroch$ rake db:create
-skom:clusterservice pskomoroch$ rake db:migrate
+skom:elasticwulf-service pskomoroch$ rake db:create
+skom:elasticwulf-service pskomoroch$ rake db:migrate
 
 2) Launch the rails app itself 
 
-skom:clusterservice pskomoroch$ script/server 
+skom:elasticwulf-service pskomoroch$ script/server 
 => Booting Mongrel
 => Rails 2.3.2 application starting on http://0.0.0.0:3000
 => Call with -d to detach
@@ -38,8 +38,8 @@ skom:clusterservice pskomoroch$ script/server
 
 3) Launch a background delayed_job worker
 
-skom:clusterservice pskomoroch$ rake jobs:work
-(in /Users/pskomoroch/rails_projects/elasticwulf-service/clusterservice)
+skom:elasticwulf-service pskomoroch$ rake jobs:work
+(in /Users/pskomoroch/rails_projects/elasticwulf-service)
 *** Starting job worker host:72-63-103-214.pools.spcsdns.net pid:12221
 background cluster launch initiated...
 1 jobs processed at 0.0498 j/s, 0 failed ...
