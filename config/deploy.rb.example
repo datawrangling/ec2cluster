@@ -4,13 +4,15 @@
 set :application, "elasticwulf-service"
 
 set :scm, :git
-set :repository, "git@github.com:datawrangling/#{application}.git"
+set :repository, "git://github.com/datawrangling/#{application}.git"
 set :branch, "master"
 default_run_options[:shell] = false
 
-set :repository_cache, "git_cache"
-set :deploy_via, :remote_cache
-set :ssh_options, { :forward_agent => true }
+# set :repository_cache, "git_cache"
+# set :deploy_via, :remote_cache
+# set :ssh_options, { :forward_agent => true }
+
+
 # set :deploy_via, :copy
 # set :git_shallow_clone, 1
 
@@ -94,7 +96,7 @@ set :ec2onrails_config, {
 }
 
 # Paths to non versioned configuration files on deployment server
-set :nonvc_configs, ['config']
+set :nonvc_configs, ['config/config.yml', 'config/s3.yml', 'database.yml']
 
 desc "Copies non versioned configuration files after setup"
 task :copy_nonvconfig, :roles => [:app] do

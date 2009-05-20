@@ -6,9 +6,9 @@
 <%= render :partial => "jobs_list", :locals => { :jobs => @jobs } %>
 </div>
 <br >
-<%= will_paginate @jobs %>
+<%= will_paginate @jobs, :id => 'wpjobs' %>
 <br />
-<%= periodically_call_remote(:url => 'jobs/refresh', :frequency => '5', :update => 'jobs_div', :method => :get, :with => "'page=' + #{params[:page]}" ) %>
+<%= periodically_call_remote(:url => {:action => :refresh, :page=> params[:page] }, :frequency => '5', :update => 'jobs_div', :method => :get) %>
 
 
 
