@@ -8,8 +8,11 @@ set :repository, "git@github.com:datawrangling/#{application}.git"
 set :branch, "master"
 default_run_options[:shell] = false
 
-set :deploy_via, :copy
-set :git_shallow_clone, 1
+set :repository_cache, "git_cache"
+set :deploy_via, :remote_cache
+set :ssh_options, { :forward_agent => true }
+# set :deploy_via, :copy
+# set :git_shallow_clone, 1
 
 # NOTE: for some reason Capistrano requires you to have both the public and
 # the private key in the same folder, the public key should have the 
@@ -89,3 +92,25 @@ set :ec2onrails_config, {
   # /etc/ssl/private/default.key (see :server_config_files_root).
   :enable_ssl => true
 }
+
+# Paths to non versioned configuration files on deployment server
+set :nonvc_configs, ['config']
+
+desc "Copies non versioned configuration files after setup"
+task :copy_nonvconfig, :roles => [:app] do
+  host = find_servers_for_task(current_task).first.host
+  privkey = ssh_options[:keys][0]
+  # ensure config folder is in shared_path
+  run "mkdir -p #{shared_path}/config"
+  nonvc_configs.each do |config|
+    run_local "scp -i '#{privkey}' #{config} app@#{host}:#{shared_path}/config"
+  end
+end
+
+desc "Moves over server config files after deploying the code"
+task :update_config, :roles => [:app] do
+  run "cp -Rf #{shared_path}/config/* #{current_path}/config"
+end
+
+after 'deploy:update_code', :copy_nonvconfig
+after 'deploy:symlink', :update_config
