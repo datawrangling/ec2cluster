@@ -59,7 +59,7 @@ class JobsController < ApplicationController
         Delayed::Job.enqueue ClusterLaunchJob.new(@job)   
         flash[:notice] = 'Job was successfully submitted.'          
 
-        format.html { redirect_to(@job) }
+        format.html { redirect_to(jobs_url) }
         format.xml  { render :xml => @job, :status => :created, :location => @job }
         format.json  { render :json => @job, :status => :created, :location => @job }        
       else
@@ -140,5 +140,8 @@ class JobsController < ApplicationController
     end
   end  
   
+  def refresh
+    @jobs = Job.paginate :page => params[:page], :order => 'created_at DESC', :per_page =>10
+  end  
   
 end

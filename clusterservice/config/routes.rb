@@ -1,6 +1,6 @@
 ActionController::Routing::Routes.draw do |map|
   map.root :controller => "jobs" 
-  map.resources :jobs, :member => { :cancel => :put , :nextstep => :put }
+  map.resources :jobs, :member => { :cancel => :put , :nextstep => :put} , :collection => { :refresh => :get }
 
   # The priority is based upon order of creation: first created -> highest priority.
 

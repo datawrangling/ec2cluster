@@ -2,40 +2,14 @@
 
 >> Submit a <%= link_to 'New job', new_job_path %>
 <BR><BR>
-<table>
-  <tr>
-    <th>Id</th>
-    <th>Name</th>
-    <th>NodeType</th>
-    <th># of Nodes</th>
-    <th>OutputPath</th>
-    <th>Started at</th>
-    <th>Updated at</th>
-    <th>Finished at</th>
-    <th>State</th>
-    <th>Progress</th>
-  </tr>
-
-<% @jobs.each do |job| %>
-  <tr>
-    <td><%=h job.id %></td>  
-    <td><%=h job.name %></td>
-    <td><%=h job.instance_type %></td>
-    <td><%=h job.number_of_instances %></td>
-    <td><%=h job.output_path %></td>
-    <td><%=h job.started_at.strftime('%m/%d %I:%M%p') unless job.started_at.nil? %></td>
-    <td><%=h job.updated_at.strftime('%m/%d %I:%M%p') unless job.updated_at.nil? %></td>
-    <td><%=h job.finished_at.strftime('%m/%d %I:%M%p') unless job.finished_at.nil? %></td>
-    <td><%=h job.state %></td>
-    <td><%=h job.progress %></td>
-    <td><%= link_to 'Show', job %></td>
-    <td><%= link_to 'Cancel', cancel_job_path(job), :method => :put if job.is_cancellable?  %></td>    
-  </tr>
-<% end %>
-</table>
+<div id="jobs_div">
+<%= render :partial => "jobs_list" %>
+</div>
 <br >
 <%= will_paginate @jobs %>
 <br />
+<%= periodically_call_remote(:url => 'jobs/refresh', :frequency => '5', :update => 'jobs_div') %>
+
 
 
 
