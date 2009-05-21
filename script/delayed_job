@@ -11,15 +11,9 @@ daemon_options = {
 }
 
 Daemons.run_proc('job_runner', daemon_options) do
-  if ARGV.include?('--')
-    ARGV.slice! 0..ARGV.index('--')
-  else
-    ARGV.clear
-  end
-  
   Dir.chdir dir
-  RAILS_ENV = ARGV.first || ENV['RAILS_ENV'] || 'development'
+  RAILS_ENV = ARGV[1] || ENV['RAILS_ENV'] || 'development'
   require File.join('config', 'environment')
-  
+
   Delayed::Worker.new.start
 end
