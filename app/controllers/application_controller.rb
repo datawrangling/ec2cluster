@@ -2,8 +2,7 @@
 # Likewise, all the methods added will be available for all controllers.
 
 class ApplicationController < ActionController::Base
-  include SslRequirement
-  before_filter :ssl_required
+  before_filter :redirect_to_ssl
   before_filter :authenticate # v1.0 is an internal app with single admin user
   helper :all # include all helpers, all the time
   protect_from_forgery # See ActionController::RequestForgeryProtection for details
@@ -20,9 +19,10 @@ protected
     end
   end
   
-  def ssl_required?
-    true
-    # ENV["RAILS_ENV"] == 'production'
+  def redirect_to_ssl
+    if ENV["RAILS_ENV"] == "production"
+      redirect_to url_for params.merge({:protocol => 'https://'})
+    end
   end
   
 end
