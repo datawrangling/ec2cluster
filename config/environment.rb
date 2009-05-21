@@ -6,9 +6,6 @@ RAILS_GEM_VERSION = '2.3.2' unless defined? RAILS_GEM_VERSION
 # Bootstrap the Rails environment, frameworks, and default configuration
 require File.join(File.dirname(__FILE__), 'boot')
 
-require 'clusterlaunchjob'
-require 'clusterterminatejob'
-
 
 Rails::Initializer.run do |config|
   # Settings in config/environments/* take precedence over those specified here.
