@@ -20,8 +20,7 @@ protected
   end
   
   def ssl_required?
-    true
-    # ENV["RAILS_ENV"] == "production"
+    return false if local_request? || RAILS_ENV == 'test'
   end
   
 end
