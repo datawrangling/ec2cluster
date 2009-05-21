@@ -3,6 +3,7 @@
 
 class ApplicationController < ActionController::Base
   include SslRequirement
+  before_filter :ssl_required
   before_filter :authenticate # v1.0 is an internal app with single admin user
   helper :all # include all helpers, all the time
   protect_from_forgery # See ActionController::RequestForgeryProtection for details
@@ -20,7 +21,8 @@ protected
   end
   
   def ssl_required?
-    return false if local_request? || RAILS_ENV == 'test'
+    true
+    # ENV["RAILS_ENV"] == 'production'
   end
   
 end
