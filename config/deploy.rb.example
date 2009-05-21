@@ -63,7 +63,7 @@ set :ec2onrails_config, {
   # Any extra RubyGems to install if desired: can be "gemname" or if a 
   # particular version is desired "gemname -v 1.0.1"
   # If you don't want to install extra rubygems then remove this
-  :rubygems => ["rails -v 2.3.2", "right_http_connection", "right_aws", "rubyist-aasm -v 2.0.5", "mislav-will_paginate -v 2.3.8"],
+  :rubygems => ["rails -v 2.3.2", "daemons", "right_http_connection", "right_aws", "rubyist-aasm -v 2.0.5", "mislav-will_paginate -v 2.3.8"],
   
   # Set the server timezone. run "cap -e ec2onrails:server:set_timezone" for 
   # details
