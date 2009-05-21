@@ -20,7 +20,8 @@ protected
   end
   
   def ssl_required?
-    ENV["RAILS_ENV"] == "production"
+    true
+    # ENV["RAILS_ENV"] == "production"
   end
   
 end
