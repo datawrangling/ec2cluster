@@ -197,10 +197,11 @@ class Job < ActiveRecord::Base
       # temporary hack to test boot script loading
       # bootscript_content = File.read("#{RAILS_ROOT}/server_config/mnt/bootstrap.sh")
       bootscript_content = ERB.new(File.read(File.dirname(__FILE__)+"/../views/jobs/bootstrap.sh.erb")).result(binding)
-      # bootscript_content = File.read(File.dirname(__FILE__)+"/../bootstrap.erb")
-               
-      puts "bootscript_content"         
+      # bootscript_content = File.read(File.dirname(__FILE__)+"/../bootstrap.erb")      
+      puts "bootscript_content:"         
       puts bootscript_content
+      
+      
       
       @master_node = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=['default', self.master_security_group], key_name=self.keypair, user_data=bootscript_content, addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
       

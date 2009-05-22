@@ -10,10 +10,21 @@ daemon_options = {
   :backtrace  => true
 }
 
+
+
 Daemons.run_proc('job_runner', daemon_options) do
   Dir.chdir dir
   RAILS_ENV = ARGV[1] || ENV['RAILS_ENV'] || 'development'
   require File.join('config', 'environment')
+  
+  # Replace the default logger
+  logger = Logger.new(File.join(RAILS_ROOT, 'log', 'delayed_job.log'))
+  
+  logger.level = ActiveRecord::Base.logger.level
+  ActiveRecord::Base.logger = logger
+  ActiveRecord::Base.clear_active_connections!
+  Delayed::Worker.logger = logger  
+  
 
   Delayed::Worker.new.start
 end
