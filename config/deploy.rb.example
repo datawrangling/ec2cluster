@@ -76,7 +76,7 @@ set :ec2onrails_config, {
   # server's filesystem. 
   # If you don't need to deploy customized config files to the server then
   # remove this.
-  :server_config_files_root => "../server_config",
+  :server_config_files_root => "server_config",
   
   # If config files are deployed, some services might need to be restarted.
   # If you don't need to deploy customized config files to the server then
