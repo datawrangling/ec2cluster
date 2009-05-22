@@ -6,7 +6,7 @@ apt-get -y install libexpat1-dev
 apt-get -y install libopenmpi1 openmpi-bin openmpi-common
 apt-get -y install libopenmpi-dev
 
-su - elasticwulf -c "
+
 cat <<EOF >> /home/elasticwulf/hello.c
 #include <stdio.h>
 #include <mpi.h>
@@ -24,7 +24,9 @@ int main(int argc, char *argv[]) {
 
   MPI_Finalize(); 
   }
-EOF"
+EOF
+
+chown elasticwulf:elasticwulf /home/elasticwulf/hello.c
 
 # Quick test of MPI
 su - elasticwulf -c "mpicc /home/elasticwulf/hello.c -o /home/elasticwulf/hello" 

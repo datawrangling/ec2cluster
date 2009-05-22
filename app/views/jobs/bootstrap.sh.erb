@@ -8,7 +8,7 @@ apt-get -y install git-core
 # TODO: optionally put this home directory on an EBS volume for snapshots/NFS mounting...
 
 groupadd elasticwulf
-useradd -d /mnt/elasticwulf -m elasticwulf -g elasticwulf elasticwulf
+useradd -d /mnt/elasticwulf -m -g elasticwulf elasticwulf
 ln -s /mnt/elasticwulf /home/elasticwulf
 chmod 775 -R /home/elasticwulf/ 
 chown -R elasticwulf:elasticwulf /home/elasticwulf
