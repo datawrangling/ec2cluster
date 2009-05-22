@@ -4,7 +4,7 @@
 set :application, "elasticwulf-service"
 
 set :scm, :git
-set :repository, "git://github.com/datawrangling/#{application}.git"
+set :repository, "git://github.com/datawrangling/elasticwulf-service.git"
 set :branch, "master"
 default_run_options[:shell] = false
 

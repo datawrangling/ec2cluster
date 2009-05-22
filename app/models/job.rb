@@ -273,6 +273,8 @@ class Job < ActiveRecord::Base
     
     # TODO, refactor - pulling out blocks to helper methods terminate_nodes, delete_security_groups, etc
     
+    # TODO: only terminate nodes which are in not in shutting down or terminated state...
+    
     self.nextstep! # cancellation_requested -> cancelling_job
     
     puts 'background cluster shutdown initiated...'  
