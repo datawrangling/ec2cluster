@@ -195,7 +195,8 @@ class Job < ActiveRecord::Base
       self.set_progress_message("launching master node")     
       
       # temporary hack to test boot script loading
-      bootscript_content = File.read("#{RAILS_ROOT}/server_config/mnt/bootstrap.sh")
+      # bootscript_content = File.read("#{RAILS_ROOT}/server_config/mnt/bootstrap.sh")
+      bootscript_content = ERB.new(File.read(File.dirname(__FILE__)+"/../views/jobs/bootstrap.sh.erb")).result(binding)
       # bootscript_content = File.read(File.dirname(__FILE__)+"/../bootstrap.erb")
                
       puts "bootscript_content"         
