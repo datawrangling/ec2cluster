@@ -6,6 +6,7 @@ aws_secret_access_key=$2
 admin_user=$3
 admin_password=$4
 rest_url=$5
+job_id=$6
 
 cat <<EOF >> /home/elasticwulf/config.yml
 aws_access_key_id: $aws_access_key_id
@@ -13,6 +14,7 @@ aws_secret_access_key: $aws_secret_access_key
 admin_user: $admin_user
 admin_password: $admin_password
 rest_url: $rest_url
+job_id: $job_id
 EOF
 
 chown elasticwulf:elasticwulf /home/elasticwulf/config.yml
