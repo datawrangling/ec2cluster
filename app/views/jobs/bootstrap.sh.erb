@@ -1,12 +1,8 @@
 #!/bin/bash
 #
-# Basic bootstrap script run on boot in the master node
-# Warning: don't add more commands to this file, user-data space is limited
 apt-get -y update
 apt-get -y upgrade
 apt-get -y install git-core
-# TODO: optionally put this home directory on an EBS volume for snapshots/NFS mounting...
-
 groupadd elasticwulf
 useradd -d /mnt/elasticwulf -m -g elasticwulf elasticwulf
 ln -s /mnt/elasticwulf /home/elasticwulf
@@ -17,21 +13,14 @@ adduser elasticwulf admin
 echo '' >> /etc/sudoers
 echo '# Members of the admin group may gain root ' >> /etc/sudoers
 echo '%admin ALL=NOPASSWD:ALL' >> /etc/sudoers
-
 repository=<%= APP_CONFIG['repository'] %>
 aws_access_key_id=<%= APP_CONFIG['aws_access_key_id'] %>
 aws_secret_access_key=<%= APP_CONFIG['aws_secret_access_key'] %>
 admin_user=<%= APP_CONFIG['admin_user'] %>
 admin_password=<%= APP_CONFIG['admin_password'] %>
 rest_url=<%= self.set_rest_url %>
-
 echo $aws_access_key_id
-echo $admin_user
 echo $rest_url
-
-# Fetch latest elasticwulf code
 cd /home/elasticwulf
 su - elasticwulf -c "git clone git://github.com/datawrangling/elasticwulf-service.git"
-# kick off larger boot script:
-# TODO: need to render AWS keys, job_id, REST url, repo into this ERB & pass to scripts
 bash /home/elasticwulf/elasticwulf-service/lib/bootscripts/ubuntu_installs.sh
