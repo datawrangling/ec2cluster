@@ -1,6 +1,28 @@
 #!/bin/bash
 # ubuntu MPI cluster installs and config https://help.ubuntu.com/community/MpichCluster
 # this script is kicked off as root within /home/elasticwulf on the master node
+aws_access_key_id=$1
+aws_secret_access_key=$2
+admin_user=$3
+admin_password=$4
+rest_url=$5
+
+cat <<EOF >> /home/elasticwulf/config.yml
+aws_access_key_id: $aws_access_key_id
+aws_secret_access_key: $aws_secret_access_key
+admin_user: $admin_user
+admin_password: $admin_password
+rest_url: $rest_url
+EOF
+
+chown elasticwulf:elasticwulf /home/elasticwulf/config.yml
+
+addgroup admin
+adduser elasticwulf admin
+echo '' >> /etc/sudoers
+echo '# Members of the admin group may gain root ' >> /etc/sudoers
+echo '%admin ALL=NOPASSWD:ALL' >> /etc/sudoers
+
 apt-get -y install build-essential
 apt-get -y install libboost-serialization-dev
 apt-get -y install libexpat1-dev

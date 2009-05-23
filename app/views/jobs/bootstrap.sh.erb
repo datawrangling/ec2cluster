@@ -1,5 +1,4 @@
 #!/bin/bash
-#
 apt-get -y update
 apt-get -y upgrade
 apt-get -y install git-core
@@ -8,19 +7,12 @@ useradd -d /mnt/elasticwulf -m -g elasticwulf elasticwulf
 ln -s /mnt/elasticwulf /home/elasticwulf
 chmod 775 -R /home/elasticwulf/ 
 chown -R elasticwulf:elasticwulf /home/elasticwulf
-addgroup admin
-adduser elasticwulf admin
-echo '' >> /etc/sudoers
-echo '# Members of the admin group may gain root ' >> /etc/sudoers
-echo '%admin ALL=NOPASSWD:ALL' >> /etc/sudoers
 repository=<%= APP_CONFIG['repository'] %>
 aws_access_key_id=<%= APP_CONFIG['aws_access_key_id'] %>
 aws_secret_access_key=<%= APP_CONFIG['aws_secret_access_key'] %>
 admin_user=<%= APP_CONFIG['admin_user'] %>
 admin_password=<%= APP_CONFIG['admin_password'] %>
 rest_url=<%= self.mpi_service_rest_url %>
-echo $aws_access_key_id
-echo $rest_url
 cd /home/elasticwulf
-su - elasticwulf -c "git clone git://github.com/datawrangling/elasticwulf-service.git"
-bash /home/elasticwulf/elasticwulf-service/lib/bootscripts/ubuntu_installs.sh
+su - elasticwulf -c "git clone $repository"
+bash /home/elasticwulf/elasticwulf-service/lib/bootscripts/ubuntu_installs.sh $aws_access_key_id $aws_secret_access_key $admin_user $admin_password $rest_url
