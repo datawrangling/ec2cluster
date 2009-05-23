@@ -1,11 +1,37 @@
 #!/bin/bash
 # ubuntu MPI cluster installs and config https://help.ubuntu.com/community/MpichCluster
+# this script is kicked off as root within /home/elasticwulf on the master node
 apt-get -y install build-essential
 apt-get -y install libboost-serialization-dev
 apt-get -y install libexpat1-dev
 apt-get -y install libopenmpi1 openmpi-bin openmpi-common
 apt-get -y install libopenmpi-dev
 
+# ruby and ruby gems...
+apt-get -y install ruby-full build-essential
+wget http://rubyforge.org/frs/download.php/45905/rubygems-1.3.1.tgz
+tar xzvf rubygems-1.3.1.tgz
+cd rubygems-1.3.1
+sudo ruby setup.rb
+sudo ln -s /usr/bin/gem1.8 /usr/bin/gem
+sudo gem update --system
+cd ../
+rm rubygems-1.3.1.tgz
+rm -R rubygems-1.3.1
+
+gem install right_http_connection --no-rdoc --no-ri
+gem install right_aws --no-rdoc --no-ri
+gem install activeresource --no-ri --no-rdoc
+
+# R & octave installs
+apt-get -y install r-base r-base-core
+apt-get -y install r-base-dev r-base-html r-base-latex r-cran-date octave3.0
+# basic HPC R packages, 
+apt-get -y install r-cran-rmpi r-cran-snow
+
+# see http://cran.r-project.org/web/views/HighPerformanceComputing.html
+# http://cran.r-project.org/web/packages/Rmpi/index.html
+# http://cran.r-project.org/web/packages/snow/index.html
 
 cat <<EOF >> /home/elasticwulf/hello.c
 #include <stdio.h>
@@ -33,19 +59,6 @@ su - elasticwulf -c "mpicc /home/elasticwulf/hello.c -o /home/elasticwulf/hello"
 ### check number of processors available
 # cat /proc/cpuinfo 
 su - elasticwulf -c "mpirun --mca btl ^openib -np 2 /home/elasticwulf/hello"
-
-# ruby and ruby gems...
-apt-get -y install ruby-full build-essential
-wget http://rubyforge.org/frs/download.php/45905/rubygems-1.3.1.tgz
-tar xzvf rubygems-1.3.1.tgz
-cd rubygems-1.3.1
-sudo ruby setup.rb
-sudo ln -s /usr/bin/gem1.8 /usr/bin/gem
-sudo gem update --system
-
-gem install right_http_connection --no-rdoc --no-ri
-gem install right_aws --no-rdoc --no-ri
-gem install activeresource --no-ri --no-rdoc
 
 # TODO: will we have a client gem???
 
