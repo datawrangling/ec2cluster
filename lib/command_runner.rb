@@ -73,9 +73,11 @@ puts is_master
 #    node_type()
 #    fetch_job_attributes()
 #    
-# # if it is a slave, we do configure_slave_node() then exit...
-#    configure_slave_node()
-#    
+# # if it is a slave, we do configure_worker_node() then exit...
+#    configure_worker_node()
+#    hit the REST url for this job_id, use GET on custom action to find node id which matches my instance id.
+#    with that node id in hand, when I'm done configuring myself, I ping the REST service custom action to update
+#    is_configured to true.
 
 # TODO , need node model in order to check cluster status in job model (node belongs to a job)
 
@@ -102,6 +104,12 @@ puts is_master
 
 # 
 
+# ./script/generate scaffold node job:references aws_image_id:text \
+# aws_instance_id:text aws_state:text dns_name:text \
+# ssh_key_name:text aws_groups:text private_dns_name:text \
+# aws_instance_type:text aws_launch_time:text aws_availability_zone:text \
+# is_configured:boolean
+
 # all strings except is_configured
 
 # job_id
@@ -116,16 +124,16 @@ puts is_master
 # aws_launch_time
 # aws_availability_zone
 # is_configured (boolean)
+# boolean
 
-
-# def clusterstatus
-#   @job = Job.find(params[:id])
-#   configured_count = @job.nodes.count(:all, :conditions => {:is_configured => true })
-#   if configured_count == @job.number_of_instances:
-#     return 'ready'
-#   else
-#     return '#{configured_count} of #{@job.number_of_instances} nodes configured'   
-# end
+def clusterstatus
+  @job = Job.find(params[:id])
+  configured_count = @job.nodes.count(:all, :conditions => {:is_configured => true })
+  if configured_count == @job.number_of_instances:
+    return 'ready'
+  else
+    return '#{configured_count} of #{@job.number_of_instances} nodes configured'   
+end
 
 
 

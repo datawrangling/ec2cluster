@@ -1,0 +1,37 @@
+<h1>Listing nodes for Job <%= @job.id %></h1>
+
+<table>
+  <tr>
+    <th>Job</th>
+    <th>Aws image</th>
+    <th>Aws instance</th>
+    <th>Aws state</th>
+    <th>Dns name</th>
+    <th>Ssh key name</th>
+    <th>Aws groups</th>
+    <th>Private dns name</th>
+    <th>Aws instance type</th>
+    <th>Aws launch time</th>
+    <th>Aws availability zone</th>
+    <th>Is configured</th>
+  </tr>
+
+<% @job.nodes.each do |node| %>
+  <tr>
+    <td><%=h node.job_id %></td>
+    <td><%=h node.aws_image_id %></td>
+    <td><%=h node.aws_instance_id %></td>
+    <td><%=h node.aws_state %></td>
+    <td><%=h node.dns_name %></td>
+    <td><%=h node.ssh_key_name %></td>
+    <td><%=h node.aws_groups %></td>
+    <td><%=h node.private_dns_name %></td>
+    <td><%=h node.aws_instance_type %></td>
+    <td><%=h node.aws_launch_time %></td>
+    <td><%=h node.aws_availability_zone %></td>
+    <td><%=h node.is_configured %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />

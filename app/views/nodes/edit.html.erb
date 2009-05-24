@@ -1,0 +1,60 @@
+<h1>Editing node</h1>
+
+<% form_for(@node) do |f| %>
+  <%= f.error_messages %>
+
+  <p>
+    <%= f.label :job %><br />
+    <%= f.text_field :job %>
+  </p>
+  <p>
+    <%= f.label :aws_image_id %><br />
+    <%= f.text_area :aws_image_id %>
+  </p>
+  <p>
+    <%= f.label :aws_instance_id %><br />
+    <%= f.text_area :aws_instance_id %>
+  </p>
+  <p>
+    <%= f.label :aws_state %><br />
+    <%= f.text_area :aws_state %>
+  </p>
+  <p>
+    <%= f.label :dns_name %><br />
+    <%= f.text_area :dns_name %>
+  </p>
+  <p>
+    <%= f.label :ssh_key_name %><br />
+    <%= f.text_area :ssh_key_name %>
+  </p>
+  <p>
+    <%= f.label :aws_groups %><br />
+    <%= f.text_area :aws_groups %>
+  </p>
+  <p>
+    <%= f.label :private_dns_name %><br />
+    <%= f.text_area :private_dns_name %>
+  </p>
+  <p>
+    <%= f.label :aws_instance_type %><br />
+    <%= f.text_area :aws_instance_type %>
+  </p>
+  <p>
+    <%= f.label :aws_launch_time %><br />
+    <%= f.text_area :aws_launch_time %>
+  </p>
+  <p>
+    <%= f.label :aws_availability_zone %><br />
+    <%= f.text_area :aws_availability_zone %>
+  </p>
+  <p>
+    <%= f.label :is_configured %><br />
+    <%= f.check_box :is_configured %>
+  </p>
+  <p>
+    <%= f.submit 'Update' %>
+  </p>
+<% end %>
+
+<%= link_to 'Show', @node %> |
+<%= link_to 'Back', nodes_path %>

@@ -1,4 +1,6 @@
 class Job < ActiveRecord::Base
+  has_many :nodes
+  
   include AASM
   
   # Set defaults 
@@ -196,19 +198,37 @@ class Job < ActiveRecord::Base
       puts bootscript_content
       
       
-      @master_node = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=[APP_CONFIG['web_security_group'], self.master_security_group], key_name=self.keypair, user_data=bootscript_content, addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
       
-      @master_instance_id = @master_node[0][:aws_instance_id]
-      @master_instance_state = @master_node[0][:aws_state]
+      node_description = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=[APP_CONFIG['web_security_group'], self.master_security_group], key_name=self.keypair, user_data=bootscript_content, addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
+      
+      @node = Node.new(:job_id => self.id)   
+      @node.save
+      update_node(@node, node_description)
+      
+      
+      @master_instance_id = node_description[0][:aws_instance_id]
+      @master_instance_state = node_description[0][:aws_state]
 
       # wait until instance has launched, then we can set hostname etc...        
       while @master_instance_state != 'running'
-        @master_node = @ec2.describe_instances(@master_instance_id)
-        @master_instance_state = @master_node[0][:aws_state]
+        node_description = @ec2.describe_instances(@master_instance_id)
+        update_node(@node, node_description)
+        # need to set Node properties based on node_description response...
+        # self.nodes.build(node_description[0])
+        # self.nodes.build({:aws_image_id => "ami-e444444d"})
+        # acme = Company.new({:name => "Acme, Inc"})
+        # acme.employees.build({:first_name => "John"})
+        # acme.employees.build({:first_name => "Mary"})
+        # acme.employees.build({:first_name => "Sue"})
+        # acme.save        
+
+        
+        
+        @master_instance_state = node_description[0][:aws_state]
         self.save
         sleep 10
       end 
-      self.set_master_instance_metadata(@master_node)
+      self.set_master_instance_metadata(node_description)
       
       
       ######## Launch Worker Nodes ##########
@@ -249,6 +269,22 @@ class Job < ActiveRecord::Base
       # do something with error...
     end
   end
+  
+  
+  def update_node(node, node_description)
+    node.aws_image_id = node_description[0][:aws_image_id]
+    node.aws_instance_id = node_description[0][:aws_instance_id]
+    node.aws_state = node_description[0][:aws_state]
+    node.dns_name = node_description[0][:dns_name]
+    node.ssh_key_name = node_description[0][:ssh_key_name]
+    node.aws_groups = node_description[0][:aws_groups].join(" ")
+    node.private_dns_name = node_description[0][:private_dns_name]
+    node.aws_instance_type = node_description[0][:aws_instance_type]
+    node.aws_launch_time = node_description[0][:aws_launch_time]
+    node.aws_availability_zone = node_description[0][:aws_availability_zone]
+    node.is_configured = false     
+    node.save
+  end  
   
 
   def terminate_cluster_later

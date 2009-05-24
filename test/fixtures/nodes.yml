@@ -1,0 +1,29 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  job: 
+  aws_image_id: MyText
+  aws_instance_id: MyText
+  aws_state: MyText
+  dns_name: MyText
+  ssh_key_name: MyText
+  aws_groups: MyText
+  private_dns_name: MyText
+  aws_instance_type: MyText
+  aws_launch_time: MyText
+  aws_availability_zone: MyText
+  is_configured: false
+
+two:
+  job: 
+  aws_image_id: MyText
+  aws_instance_id: MyText
+  aws_state: MyText
+  dns_name: MyText
+  ssh_key_name: MyText
+  aws_groups: MyText
+  private_dns_name: MyText
+  aws_instance_type: MyText
+  aws_launch_time: MyText
+  aws_availability_zone: MyText
+  is_configured: false

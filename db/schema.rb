@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090426230408) do
+ActiveRecord::Schema.define(:version => 20090524202142) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -57,6 +57,23 @@ ActiveRecord::Schema.define(:version => 20090426230408) do
     t.string   "master_public_hostname"
     t.datetime "cancelled_at"
     t.datetime "failed_at"
+  end
+
+  create_table "nodes", :force => true do |t|
+    t.integer  "job_id"
+    t.text     "aws_image_id"
+    t.text     "aws_instance_id"
+    t.text     "aws_state"
+    t.text     "dns_name"
+    t.text     "ssh_key_name"
+    t.text     "aws_groups"
+    t.text     "private_dns_name"
+    t.text     "aws_instance_type"
+    t.text     "aws_launch_time"
+    t.text     "aws_availability_zone"
+    t.boolean  "is_configured"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
 end
