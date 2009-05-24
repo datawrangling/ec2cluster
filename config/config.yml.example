@@ -2,6 +2,7 @@ development:
   rails_application_port: 3000
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
+  web_security_group: 'default'
   default_master_ami_id: ami-ef48af86
   default_worker_ami_id: ami-ef48af86
   default_instance_type: m1.small
@@ -11,11 +12,13 @@ development:
   default_user_id: 1
   admin_user: REPLACE_ME
   admin_password: REPLACE_ME
+  protocol: http
 
 test:
   rails_application_port: 3000
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
+  web_security_group: 'default'
   default_master_ami_id: ami-ef48af86
   default_worker_ami_id: ami-ef48af86
   default_instance_type: c1.medium
@@ -25,11 +28,13 @@ test:
   default_user_id: 1
   admin_user: REPLACE_ME
   admin_password: REPLACE_ME
+  protocol: http
 
 production:
   rails_application_port: 3000
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
+  web_security_group: 'default'
   default_master_ami_id: ami-ef48af86
   default_worker_ami_id: ami-ef48af86
   default_instance_type: c1.medium
@@ -39,3 +44,4 @@ production:
   default_user_id: 1
   admin_user: REPLACE_ME
   admin_password: REPLACE_ME
+  protocol: https  

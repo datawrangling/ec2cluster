@@ -171,9 +171,7 @@ class Job < ActiveRecord::Base
 
   def launch_cluster
     # this method is called from the controller create method
-    
     # TODO, refactor - pulling out blocks to helper methods launch_master, launch_workers etc...
-    
     puts 'background cluster launch initiated...' 
     begin      
       self.nextstep! # launch_pending -> launching_instances      
@@ -193,17 +191,12 @@ class Job < ActiveRecord::Base
       # launch nodes in both job specific security group and default security group
       # so that they can ping the EC2 REST server itself w/o opening firewall.      
       self.set_progress_message("launching master node")     
-      
-      # temporary hack to test boot script loading
-      # bootscript_content = File.read("#{RAILS_ROOT}/server_config/mnt/bootstrap.sh")
-      bootscript_content = ERB.new(File.read(File.dirname(__FILE__)+"/../views/jobs/bootstrap.sh.erb")).result(binding)
-      # bootscript_content = File.read(File.dirname(__FILE__)+"/../bootstrap.erb")      
+      bootscript_content = ERB.new(File.read(File.dirname(__FILE__)+"/../views/jobs/bootstrap.sh.erb")).result(binding)    
       puts "bootscript_content:"         
       puts bootscript_content
       
       
-      
-      @master_node = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=['default', self.master_security_group], key_name=self.keypair, user_data=bootscript_content, addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
+      @master_node = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=[APP_CONFIG['web_security_group'], self.master_security_group], key_name=self.keypair, user_data=bootscript_content, addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
       
       @master_instance_id = @master_node[0][:aws_instance_id]
       @master_instance_state = @master_node[0][:aws_state]
@@ -221,8 +214,6 @@ class Job < ActiveRecord::Base
       ######## Launch Worker Nodes ##########
       
       # TODO periodically update the progress field with text string of number of instances launched 
-      
-      
       if self.number_of_instances > 1
         self.set_progress_message("launching worker nodes")
         
@@ -288,7 +279,10 @@ class Job < ActiveRecord::Base
     # Terminate cluster nodes
     self.set_progress_message("terminating cluster nodes") 
   
-    # TODO: fetch instance ids of all nodes
+    # TODO: fetch instance ids of all nodes... can do this by getting instance ids in chained lookup
+    # where state not in shutting_down or terminated...
+    # job.nodes.instance_id -> ['i-f222222d','i-f222222e']
+    
     # for now we will just grab master...
     # ec2.terminate_instances(['i-f222222d','i-f222222e'])
     @ec2.terminate_instances([self.master_instance_id])
@@ -315,13 +309,7 @@ class Job < ActiveRecord::Base
     self.set_progress_message("all cluster nodes terminated") 
     
   end  
-  
-  # TODO add methods to be called by worker via rest url and custom controller actions:
-  # t.string   "progress"
-  # t.text     "error_message"
-    
-
-                        
+                              
 protected
 
 
@@ -356,14 +344,12 @@ protected
 
   def set_rest_url
     hostname = Socket.gethostname
-    # port = APP_CONFIG['rails_application_port']
-    # self.mpi_service_rest_url = "http://#{hostname}:#{port}/"
-    self.mpi_service_rest_url = "https://#{hostname}/"
+    protocol = APP_CONFIG['protocol']
+    self.mpi_service_rest_url = "#{protocol}://#{hostname}/"
     self.save        
   end
   
   def set_security_groups  
-    # TODO- add timestamp to id...
     timeval = Time.now.strftime('%m%d%y-%I%M%p')
     update_attribute(:master_security_group, "#{id}-elasticwulf-master-"+timeval)
     update_attribute(:worker_security_group, "#{id}-elasticwulf-worker-"+timeval)
@@ -385,11 +371,11 @@ protected
     errors.add(:number_of_instances, 'You need at least 1 node in your cluster') if number_of_instances < 1
   end  
 
-  # TODO: verify S3 buckets exist using right_aws
+  # TODO: verify S3 buckets exist using right_aws before saving job
   # t.string   "output_path" 
   # t.string   "log_path"
 
-  # TODO: verify s3 input files are accesible using right_aws
+  # TODO: verify s3 input files are accesible using right_aws before saving job
   # t.text     "input_files" 
   
 end
