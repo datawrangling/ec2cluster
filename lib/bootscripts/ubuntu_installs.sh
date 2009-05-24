@@ -1,6 +1,10 @@
 #!/bin/bash
 # ubuntu MPI cluster installs and config https://help.ubuntu.com/community/MpichCluster
 # this script is kicked off as root within /home/elasticwulf on the master node
+
+# TODO: check if any installs need to be modified for 64 bit vs. 32 bit amis
+# information can be obtained by curl of instance metadata.
+
 aws_access_key_id=$1
 aws_secret_access_key=$2
 admin_user=$3
@@ -8,7 +12,7 @@ admin_password=$4
 rest_url=$5
 job_id=$6
 
-cat <<EOF >> /home/elasticwulf/config.yml
+cat <<EOF >> /home/elasticwulf/cluster_config.yml
 aws_access_key_id: $aws_access_key_id
 aws_secret_access_key: $aws_secret_access_key
 admin_user: $admin_user
@@ -25,6 +29,12 @@ echo '' >> /etc/sudoers
 echo '# Members of the admin group may gain root ' >> /etc/sudoers
 echo '%admin ALL=NOPASSWD:ALL' >> /etc/sudoers
 
+# version control
+apt-get -y install zip unzip rsync bzip2
+apt-get -y install curl subversion mercurial git-core cvs
+apt-get -y install s3cmd ec2-ami-tools
+
+# MPI related
 apt-get -y install build-essential
 apt-get -y install libboost-serialization-dev
 apt-get -y install libexpat1-dev
@@ -42,6 +52,7 @@ sudo gem update --system
 cd ../
 rm rubygems-1.3.1.tgz
 rm -R rubygems-1.3.1
+
 
 gem install right_http_connection --no-rdoc --no-ri
 gem install right_aws --no-rdoc --no-ri

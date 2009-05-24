@@ -140,6 +140,41 @@ class JobsController < ApplicationController
     end
   end  
   
+  # PUT /jobs/1/updateprogress
+  def updateprogress
+    @job = Job.find(params[:id])
+    logger.debug( 'updating progress to #{params[:progress]}' ) 
+    @job.progress = params[:progress]
+    @job.save
+
+    respond_to do |format|
+      format.html { redirect_to(jobs_url) }
+      format.xml  { render :xml => @job }
+      format.json  { render :json => @job }
+    end
+  end
+  
+  # PUT /jobs/1/error
+  def error
+    @job = Job.find(params[:id])
+    logger.debug( 'updating error_message to #{params[:error_message]}' ) 
+    @job.error_message = params[:error_message]
+    @job.save
+    @job.error!
+
+    respond_to do |format|
+      format.html { redirect_to(jobs_url) }
+      format.xml  { render :xml => @job }
+      format.json  { render :json => @job }
+    end
+  end    
+      
+  
+  
+  
+  
+  
+  # GET /jobs/refresh
   def refresh
     @jobs = Job.paginate :page => params[:page], :order => 'created_at DESC', :per_page =>10
   end  
