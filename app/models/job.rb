@@ -37,7 +37,7 @@ class Job < ActiveRecord::Base
     self[:keypair] or APP_CONFIG['default_keypair']
   end    
   
-  # TODO: add in User model and basic http autehntication, then pass in value here
+  # TODO: add in User model, then pass in value here
   def user_id
     self[:user_id] or APP_CONFIG['default_user_id']
   end  
@@ -126,12 +126,7 @@ class Job < ActiveRecord::Base
       :waiting_for_jobs
     ]
   end  
-  
-  # aasm_event :shutdown do
-  #   transitions :to => :shutdown_requested, :from => [:running_job]
-  # end  
-  
-  
+    
   aasm_event :error do
     transitions :to => :termination_requested, 
     :from => [
@@ -173,6 +168,7 @@ class Job < ActiveRecord::Base
 
 
   def launch_cluster
+    # TODO refactor common launch blocks out to helper methods
     puts 'background cluster launch initiated...' 
     begin      
       self.nextstep! # launch_pending -> launching_instances   
@@ -192,17 +188,19 @@ class Job < ActiveRecord::Base
             group_ids=[APP_CONFIG['web_security_group'], self.master_security_group], key_name=self.keypair,
             user_data=bootscript, addressing_type = 'public', instance_type = self.instance_type,
             kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone,
-            block_device_mappings = nil)      
+            block_device_mappings = nil)   
+               
       @masternode = Node.new(:job_id => self.id)   
       @masternode.save
-      update_node(@masternode, master_node_description)
+      update_node(@masternode, master_node_description[0])
       @master_instance_id = @masternode.aws_instance_id
       @master_instance_state = @masternode.aws_state
+      
       puts "Waiting for master node to boot"
       # wait until instance has launched, then we can update hostname etc...        
       while @master_instance_state != 'running'
         master_node_description = @ec2.describe_instances(@master_instance_id)
-        update_node(@masternode, master_node_description)
+        update_node(@masternode, master_node_description[0])
         @master_instance_state = @masternode.aws_state
         self.save
         sleep 5
@@ -211,24 +209,46 @@ class Job < ActiveRecord::Base
       puts "Master node booted"      
           
       ######## Launch Worker Nodes ##########
-      
       if self.number_of_instances > 1
         puts "Launching worker nodes"   
         self.set_progress_message("launching worker nodes")
-        @ec2.create_security_group(self.worker_security_group,'Elasticwulf-Worker-Node')      
-        # simulate long running task of launching EC2 worker nodes
-        i = 0
-        while i < 3 do
-           sleep 2
-           # TODO periodically update the progress field with text string of number of instances launched 
-           # when number of launched instances = number_of_instances, exit.
-           i += 1
-        end   
+        @ec2.create_security_group(self.worker_security_group,'Elasticwulf-Worker-Node')    
+        worker_count = self.number_of_instances - 1
+        puts "worker count is #{worker_count}"
+        # Boot and save initial worker node states
+        worker_node_descriptions = @ec2.run_instances(image_id=self.worker_ami_id, min_count=worker_count,
+              max_count=worker_count, group_ids=[APP_CONFIG['web_security_group'], self.worker_security_group],
+              key_name=self.keypair,user_data=bootscript, addressing_type = 'public', 
+              instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil,
+              availability_zone = self.availability_zone, block_device_mappings = nil)
+        puts "length of worker_node_descriptions list: #{worker_node_descriptions.count}"
+        puts worker_node_descriptions
+        # Create the corresponding node records in the db...
+        worker_node_descriptions.each do |node_description|
+          puts node_description
+          @workernode = Node.new(:job_id => self.id)   
+          @workernode.save
+          update_node(@workernode, node_description)
+        end
+        
+        puts "Waiting for worker nodes to boot"
+        pending_nodes = self.nodes.find(:all)
+        running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})
+        # Loop until all nodes are started...
+        until running_nodes.count == self.number_of_instances do
+           refresh_node_data_from_ec2(pending_nodes)
+           running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})
+           progress_message = "#{running_nodes.count} of #{self.number_of_instances} started"
+           puts progress_message
+           self.set_progress_message(progress_message) 
+           sleep 5         
+        end        
       end
+      ######## Finished Worker Nodes ##########
       
       self.set_progress_message("configuring cluster")      
       self.nextstep!  # launching_instances -> configuring_cluster
-      puts "Launch completed successfully"       
+      puts "All nodes booted successfully, configuring cluster"       
     rescue Exception 
       self.error! # launching_instances -> terminating_due_to_error
       raise
@@ -259,7 +279,9 @@ class Job < ActiveRecord::Base
       until terminated_nodes.count == self.number_of_instances do
          refresh_node_data_from_ec2(running_nodes)
          terminated_nodes = self.nodes.find(:all, :conditions => {:aws_state => "terminated" })
-         self.set_progress_message("#{terminated_nodes.count} of #{self.number_of_instances} terminated") 
+         progress_message = "#{terminated_nodes.count} of #{self.number_of_instances} terminated"
+         puts progress_message
+         self.set_progress_message(progress_message) 
          sleep 5         
       end 
       # Nodes are now terminated, delete associated EC2 security groups: 
@@ -271,7 +293,7 @@ class Job < ActiveRecord::Base
       self.set_progress_message("all cluster nodes terminated") 
       puts "Cluster termination completed successfully"         
     rescue Exception 
-      raise
+      puts "Error"
       # do something with error...
     end    
   end  
@@ -282,7 +304,7 @@ class Job < ActiveRecord::Base
                                 APP_CONFIG['aws_secret_access_key'])
     nodes.each do |node|
       node_description = @ec2.describe_instances(node["aws_instance_id"])
-      update_node(node, node_description)
+      update_node(node, node_description[0])
     end
   end
     
@@ -291,16 +313,16 @@ class Job < ActiveRecord::Base
   end           
          
   def update_node(node, node_description)
-    node.aws_image_id = node_description[0][:aws_image_id]
-    node.aws_instance_id = node_description[0][:aws_instance_id]
-    node.aws_state = node_description[0][:aws_state]
-    node.dns_name = node_description[0][:dns_name]
-    node.ssh_key_name = node_description[0][:ssh_key_name]
-    node.aws_groups = node_description[0][:aws_groups].join(" ")
-    node.private_dns_name = node_description[0][:private_dns_name]
-    node.aws_instance_type = node_description[0][:aws_instance_type]
-    node.aws_launch_time = node_description[0][:aws_launch_time]
-    node.aws_availability_zone = node_description[0][:aws_availability_zone]
+    node.aws_image_id = node_description[:aws_image_id]
+    node.aws_instance_id = node_description[:aws_instance_id]
+    node.aws_state = node_description[:aws_state]
+    node.dns_name = node_description[:dns_name]
+    node.ssh_key_name = node_description[:ssh_key_name]
+    node.aws_groups = node_description[:aws_groups].join(" ")
+    node.private_dns_name = node_description[:private_dns_name]
+    node.aws_instance_type = node_description[:aws_instance_type]
+    node.aws_launch_time = node_description[:aws_launch_time]
+    node.aws_availability_zone = node_description[:aws_availability_zone]
     node.is_configured = false if node.is_configured.nil?   
     node.save
   end         
