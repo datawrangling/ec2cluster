@@ -240,7 +240,7 @@ puts job.state
 
 # need to add a custom GET action /clusterstatus where the master can see if all the worker nodes have finished nfs mounting... 
 # cluster boot script on master periodically checks with REST server to see if cluster is configured 
-# /clusterstatus is custom action for a job which checks how many nodes have reported they are configured...the logic of that method just checks to see if num_instances == configured_instances, where configured instances is just a count(*) from nodes where state = configured , then clusterstatus will report back 'live' , else it will report back 'booting'.
+# /clusterstatus is custom action for a job which checks how many nodes have reported they are configured...the logic of that method just checks to see if number_of_instances == configured_instances, where configured instances is just a count(*) from nodes where state = configured , then clusterstatus will report back 'live' , else it will report back 'booting'.
 # when the masternode gets a response of 'live', it will send a progress update 'booting MPI', then do an mpd boot to initiate the MPI ring, test that mpi is working, send an update on progress that mpi has booted, then kick off the job command and send a /nextstep ping to the REST server.
 
 

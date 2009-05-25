@@ -1,6 +1,6 @@
 class Job < ActiveRecord::Base
   has_many :nodes
-  
+                              
   include AASM
   
   # Set defaults 
@@ -145,6 +145,7 @@ class Job < ActiveRecord::Base
       :shutting_down_instances,
       :cancellation_requested,
       :cancelling_job,
+      :cancelled,
       :termination_requested,
       :terminating_job
     ]
@@ -172,105 +173,127 @@ class Job < ActiveRecord::Base
 
 
   def launch_cluster
-    # this method is called from the controller create method
-    # TODO, refactor - pulling out blocks to helper methods launch_master, launch_workers etc...
     puts 'background cluster launch initiated...' 
     begin      
-      self.nextstep! # launch_pending -> launching_instances      
-      ######## Initialize right_aws #########
+      self.nextstep! # launch_pending -> launching_instances   
       @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
                                   APP_CONFIG['aws_secret_access_key'])
-                                  
-                                  
-      @mastergroup = self.master_security_group
-      
-      # create master security group
+      ######## Launch Master Node  ##########   
       puts "Creating master security group"
-      @ec2.create_security_group(@mastergroup,'Elasticwulf-Master-Node')
-      @mastergroup = @ec2.describe_security_groups([@mastergroup])[0]
-      
-      ######## Launch Master Node  ##########
-      # launch nodes in both job specific security group and default security group
+      @ec2.create_security_group(self.master_security_group,'Elasticwulf-Master-Node')
+      # launch nodes in both job specific security group and web security group
       # so that they can ping the EC2 REST server itself w/o opening firewall.      
       self.set_progress_message("launching master node")     
-      bootscript_content = ERB.new(File.read(File.dirname(__FILE__)+"/../views/jobs/bootstrap.sh.erb")).result(binding)    
-      puts "bootscript_content:"         
-      puts bootscript_content
+      template = "/../views/jobs/bootstrap.sh.erb"
+      bootscript = ERB.new(File.read(File.dirname(__FILE__)+template)).result(binding)  
       
-      
-      
-      node_description = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1, group_ids=[APP_CONFIG['web_security_group'], self.master_security_group], key_name=self.keypair, user_data=bootscript_content, addressing_type = 'public', instance_type = self.instance_type, kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone, block_device_mappings = nil)
-      
-      @node = Node.new(:job_id => self.id)   
-      @node.save
-      update_node(@node, node_description)
-      
-      
-      @master_instance_id = node_description[0][:aws_instance_id]
-      @master_instance_state = node_description[0][:aws_state]
-
-      # wait until instance has launched, then we can set hostname etc...        
+      # boot and save initial master node state           
+      master_node_description = @ec2.run_instances(image_id=self.master_ami_id, min_count=1, max_count=1,
+            group_ids=[APP_CONFIG['web_security_group'], self.master_security_group], key_name=self.keypair,
+            user_data=bootscript, addressing_type = 'public', instance_type = self.instance_type,
+            kernel_id = nil, ramdisk_id = nil, availability_zone = self.availability_zone,
+            block_device_mappings = nil)      
+      @masternode = Node.new(:job_id => self.id)   
+      @masternode.save
+      update_node(@masternode, master_node_description)
+      @master_instance_id = @masternode.aws_instance_id
+      @master_instance_state = @masternode.aws_state
+      puts "Waiting for master node to boot"
+      # wait until instance has launched, then we can update hostname etc...        
       while @master_instance_state != 'running'
-        node_description = @ec2.describe_instances(@master_instance_id)
-        update_node(@node, node_description)
-        # need to set Node properties based on node_description response...
-        # self.nodes.build(node_description[0])
-        # self.nodes.build({:aws_image_id => "ami-e444444d"})
-        # acme = Company.new({:name => "Acme, Inc"})
-        # acme.employees.build({:first_name => "John"})
-        # acme.employees.build({:first_name => "Mary"})
-        # acme.employees.build({:first_name => "Sue"})
-        # acme.save        
-
-        
-        
-        @master_instance_state = node_description[0][:aws_state]
+        master_node_description = @ec2.describe_instances(@master_instance_id)
+        update_node(@masternode, master_node_description)
+        @master_instance_state = @masternode.aws_state
         self.save
         sleep 10
       end 
-      self.set_master_instance_metadata(node_description)
-      
-      
+      self.set_master_instance_metadata(@masternode)  
+      puts "Master node booted"      
+          
       ######## Launch Worker Nodes ##########
       
-      # TODO periodically update the progress field with text string of number of instances launched 
       if self.number_of_instances > 1
+        puts "Launching worker nodes"   
         self.set_progress_message("launching worker nodes")
-        
-        # create worker security group   
-        @workergroup = self.worker_security_group
-        @ec2.create_security_group(@workergroup,'Elasticwulf-Worker-Node')
-        workergroup = @ec2.describe_security_groups([@workergroup])[0] 
-        
-        puts workergroup      
-      
+        @ec2.create_security_group(self.worker_security_group,'Elasticwulf-Worker-Node')      
         # simulate long running task of launching EC2 worker nodes
         i = 0
         while i < 3 do
-           sleep 10
-           # fetch total number of launched instances and update progress
-           # when number of launched instances = num_instances, exit.
+           sleep 2
+           # TODO periodically update the progress field with text string of number of instances launched 
+           # when number of launched instances = number_of_instances, exit.
            i += 1
-        end 
-             
+        end   
       end
       
       self.set_progress_message("configuring cluster")      
       self.nextstep!  # launching_instances -> configuring_cluster
-      # job is now in  "configuring_cluster" state.... 
-      # The job will stay in "configuring_cluster" state until cluster is set up (NFS etc)
-      # and the Master Node reports back that it is running via the custom action...
-      # then the job will stay in a "running_job" state until the master node reports back again
-      # to the REST api, then the state will become "shutdown_requested"... and the custom action
-      # "cancel" is called.     
-      
+      puts "Launch completed successfully"       
     rescue Exception 
       self.error! # launching_instances -> terminating_due_to_error
+      raise
       # do something with error...
     end
   end
   
+  def terminate_cluster_later
+    # push cluster termination off to background using delayed_job
+    self.send_later(:terminate_cluster)
+    self.set_progress_message("sent shutdown request")     
+  end
+ 
   
+  def terminate_cluster    
+    puts 'background cluster shutdown initiated...'  
+    begin 
+      self.nextstep! # cancellation_requested -> cancelling_job
+      @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
+                                  APP_CONFIG['aws_secret_access_key'])
+      self.set_progress_message("terminating cluster nodes")   
+      # Only attempt to shut down running nodes...
+      running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running" })
+      running_instance_ids = get_instances_ids(running_nodes) 
+      @ec2.terminate_instances(running_instance_ids)
+      # @ec2.terminate_instances([self.master_instance_id])
+      # Loop until all nodes are terminated...
+      while running_nodes.count > 0 do
+         sleep 5
+         ## TODO replace with call to describe_instances
+         refresh_node_data_from_ec2(running_nodes)
+         running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running" })
+         
+         running_instance_ids = get_instances_ids(running_nodes)
+         terminated_count = self.number_of_instances - running_nodes.count
+         self.set_progress_message("#{terminated_count} of #{self.number_of_instances} terminated") 
+      end 
+      # Nodes are now terminated, delete associated EC2 security groups: 
+      @ec2.delete_security_group(self.master_security_group)
+      if self.number_of_instances > 1
+        @ec2.delete_security_group(self.worker_security_group)
+      end
+      self.nextstep!
+      self.set_progress_message("all cluster nodes terminated") 
+      puts "Cluster termination completed successfully"         
+    rescue Exception 
+      raise
+      # do something with error...
+    end    
+  end  
+           
+           
+  def refresh_node_data_from_ec2(nodes)
+    @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
+                                APP_CONFIG['aws_secret_access_key'])
+    nodes.each do |node|
+      node_description = @ec2.describe_instances(node["aws_instance_id"])
+      update_node(node, node_description)
+    end
+  end
+    
+  def get_instances_ids(nodes)
+    return nodes.map { |node| node["aws_instance_id"] } 
+  end           
+         
   def update_node(node, node_description)
     node.aws_image_id = node_description[0][:aws_image_id]
     node.aws_instance_id = node_description[0][:aws_instance_id]
@@ -282,72 +305,12 @@ class Job < ActiveRecord::Base
     node.aws_instance_type = node_description[0][:aws_instance_type]
     node.aws_launch_time = node_description[0][:aws_launch_time]
     node.aws_availability_zone = node_description[0][:aws_availability_zone]
-    node.is_configured = false     
+    node.is_configured = false if node.is_configured.nil?   
     node.save
-  end  
-  
-
-  def terminate_cluster_later
-    # push cluster termination off to background using delayed_job
-    self.send_later(:terminate_cluster)
-    self.set_progress_message("sent shutdown request")     
-  end
- 
-  
-  def terminate_cluster
-    # prior state could be: terminating_instances, cancellation_requested, 
-    # or terminating_due_to_error
-    
-    # TODO, refactor - pulling out blocks to helper methods terminate_nodes, delete_security_groups, etc
-    
-    # TODO: only terminate nodes which are in not in shutting down or terminated state...
-    
-    self.nextstep! # cancellation_requested -> cancelling_job
-    
-    puts 'background cluster shutdown initiated...'  
-  
-    ######## Initialize right_aws #########
-    @ec2 = RightAws::Ec2.new(APP_CONFIG['aws_access_key_id'],
-                                APP_CONFIG['aws_secret_access_key'])  
-  
-    # Find nodes belonging to cluster
-    
-    # Terminate cluster nodes
-    self.set_progress_message("terminating cluster nodes") 
-  
-    # TODO: fetch instance ids of all nodes... can do this by getting instance ids in chained lookup
-    # where state not in shutting_down or terminated...
-    # job.nodes.instance_id -> ['i-f222222d','i-f222222e']
-    
-    # for now we will just grab master...
-    # ec2.terminate_instances(['i-f222222d','i-f222222e'])
-    @ec2.terminate_instances([self.master_instance_id])
-  
-    # Loop until all nodes are terminated...
-  
-    # simulate long running task of shutting down an EC2 cluster
-
-    i = 0
-    while i < 3 do
-       sleep 10
-       # fetch number of terminated instances using right_aws and update progress message
-       # when number of terminated_instances = original num_instances exit
-       i += 1
-    end 
-  
-    # Nodes are now terminated, delete associated EC2 security groups: 
-    @ec2.delete_security_group(self.master_security_group)
-    if self.number_of_instances > 1
-      @ec2.delete_security_group(self.worker_security_group)
-    end
-    
-    self.nextstep! # cancelling_job -> cancelled
-    self.set_progress_message("all cluster nodes terminated") 
-    
-  end  
+  end         
+         
                               
 protected
-
 
   def set_progress_message(message)
     update_attribute(:progress, message )
@@ -357,9 +320,7 @@ protected
   def set_start_time
     # Time when the cluster has actually booted and MPI job starts running
     update_attribute(:started_at, Time.now )
-    self.set_progress_message("fetching input files from S3")
-    # self.set_progress_message("running job commands")
-    # self.set_progress_message("copying output files to S3")            
+    self.set_progress_message("fetching input files from S3")          
     self.save 
   end
   
@@ -393,18 +354,16 @@ protected
   end  
 
   def set_master_instance_metadata(master_node)
-    # TODO: these should be filled in with values obtained from a right_aws query 
-    # or by using parameters passed into the method obtained by parsing the 
-    # command line output of the launch script at the end of the delayed_job
-    update_attribute(:master_instance_id, master_node[0][:aws_instance_id] )
-    update_attribute(:master_hostname, master_node[0][:private_dns_name] )
-    update_attribute(:master_public_hostname,  master_node[0][:dns_name]  )
+    update_attribute(:master_instance_id, master_node.aws_instance_id )
+    update_attribute(:master_hostname, master_node.private_dns_name )
+    update_attribute(:master_public_hostname,  master_node.dns_name  )
     self.save
   end  
 
 
   def number_of_instances_must_be_at_least_1
-    errors.add(:number_of_instances, 'You need at least 1 node in your cluster') if number_of_instances < 1
+    errors.add(:number_of_instances, 
+    'You need at least 1 node in your cluster') if number_of_instances < 1
   end  
 
   # TODO: verify S3 buckets exist using right_aws before saving job

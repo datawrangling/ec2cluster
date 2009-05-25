@@ -170,35 +170,25 @@
 </tr>
 </table>
 
-<h2>Cluster Node Information:</h2>
+<h2>Cluster Nodes:</h2>
 <table>
 <tr>
-  <th>Aws image</th>
   <th>Aws instance</th>
   <th>Aws state</th>
   <th>Dns name</th>
-  <th>Ssh key name</th>
-  <th>Aws groups</th>
   <th>Private dns name</th>
-  <th>Aws instance type</th>
   <th>Aws launch time</th>
-  <th>availability zone</th>
   <th>Is configured</th>  
 </tr>
 
 <% @job.nodes.each do |n| %>  
   <tr>
-    <td><%=h n.aws_image_id %></td>
     <td><%=h n.aws_instance_id %></td>
     <td><%=h n.aws_state %></td>
     <td><%=h n.dns_name %></td>
-    <td><%=h n.ssh_key_name %></td>
-    <td><%=h n.aws_groups %></td>
     <td><%=h n.private_dns_name %></td>
-    <td><%=h n.aws_instance_type %></td>
     <td><%=h n.aws_launch_time %></td>
-    <td><%=h n.aws_availability_zone %></td>
-    <td><%=h n.is_configured %></td>
+    <td><%=h n.is_configured.to_s %></td>
   </tr>
 <% end %> 
 
