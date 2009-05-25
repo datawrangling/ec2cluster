@@ -21,7 +21,7 @@
       <td><%=h job.started_at.strftime('%m/%d %I:%M%p') unless job.started_at.nil? %></td>
       <td><%=h job.updated_at.strftime('%m/%d %I:%M%p') unless job.updated_at.nil? %></td>
       <td><%=h job.finished_at.strftime('%m/%d %I:%M%p') unless job.finished_at.nil? %></td>
-      <td><%=h job.state %></td>
+      <td><%=h job.state.gsub("_", " ") %></td>
       <td><%=h job.progress %></td>
       <td><%= link_to 'Show', job %></td>
       <td><%= link_to 'Cancel', cancel_job_path(job), :method => :put if job.is_cancellable?  %></td>    

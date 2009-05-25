@@ -205,7 +205,7 @@ class Job < ActiveRecord::Base
         update_node(@masternode, master_node_description)
         @master_instance_state = @masternode.aws_state
         self.save
-        sleep 10
+        sleep 5
       end 
       self.set_master_instance_metadata(@masternode)  
       puts "Master node booted"      
@@ -254,17 +254,13 @@ class Job < ActiveRecord::Base
       running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running" })
       running_instance_ids = get_instances_ids(running_nodes) 
       @ec2.terminate_instances(running_instance_ids)
-      # @ec2.terminate_instances([self.master_instance_id])
+      terminated_nodes = self.nodes.find(:all, :conditions => {:aws_state => "terminated" })
       # Loop until all nodes are terminated...
-      while running_nodes.count > 0 do
-         sleep 5
-         ## TODO replace with call to describe_instances
+      until terminated_nodes.count == self.number_of_instances do
          refresh_node_data_from_ec2(running_nodes)
-         running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running" })
-         
-         running_instance_ids = get_instances_ids(running_nodes)
-         terminated_count = self.number_of_instances - running_nodes.count
-         self.set_progress_message("#{terminated_count} of #{self.number_of_instances} terminated") 
+         terminated_nodes = self.nodes.find(:all, :conditions => {:aws_state => "terminated" })
+         self.set_progress_message("#{terminated_nodes.count} of #{self.number_of_instances} terminated") 
+         sleep 5         
       end 
       # Nodes are now terminated, delete associated EC2 security groups: 
       @ec2.delete_security_group(self.master_security_group)
