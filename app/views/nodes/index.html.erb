@@ -2,23 +2,21 @@
 
 <table>
   <tr>
-    <th>Job</th>
-    <th>Aws image</th>
-    <th>Aws instance</th>
-    <th>Aws state</th>
+    <th>AMI</th>
+    <th>instance</th>
+    <th>state</th>
     <th>Dns name</th>
-    <th>Ssh key name</th>
+    <th>key name</th>
     <th>Aws groups</th>
     <th>Private dns name</th>
-    <th>Aws instance type</th>
-    <th>Aws launch time</th>
-    <th>Aws availability zone</th>
+    <th>instance type</th>
+    <th>launch time</th>
+    <th>availability zone</th>
     <th>Is configured</th>
   </tr>
 
 <% @job.nodes.each do |node| %>
   <tr>
-    <td><%=h node.job_id %></td>
     <td><%=h node.aws_image_id %></td>
     <td><%=h node.aws_instance_id %></td>
     <td><%=h node.aws_state %></td>

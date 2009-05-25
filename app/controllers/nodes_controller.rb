@@ -7,11 +7,12 @@ class NodesController < ApplicationController
   # GET /nodes
   # GET /nodes.xml
   def index
-    @nodes = Node.all
+    @nodes = @job.nodes.all
 
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @nodes }
+      format.json  { render :json => @nodes }
     end
   end
 
@@ -23,6 +24,7 @@ class NodesController < ApplicationController
     respond_to do |format|
       format.html # show.html.erb
       format.xml  { render :xml => @node }
+      format.json  { render :json => @node }      
     end
   end
 
@@ -34,6 +36,7 @@ class NodesController < ApplicationController
     respond_to do |format|
       format.html # new.html.erb
       format.xml  { render :xml => @node }
+      format.json  { render :json => @node }      
     end
   end
 
@@ -63,15 +66,22 @@ class NodesController < ApplicationController
   # PUT /nodes/1.xml
   def update
     @node = @job.nodes.find(params[:id])
-
+    
     respond_to do |format|
       if @node.update_attributes(params[:node])
+        @ready_nodes = @job.nodes.find(:all, :conditions => {:is_configured => true })
+        if @ready_nodes.count == @job.number_of_instances and @job.state == "waiting_for_nodes"
+          @job.nextstep!  # waiting_for_nodes - > configuring_cluster
+          puts "All nodes report ready, configuring cluster"
+        end        
         flash[:notice] = 'Node was successfully updated.'
         format.html { redirect_to job_url(@job) }
         format.xml  { head :ok }
+        format.json  { head :ok }        
       else
         format.html { render :action => "edit" }
         format.xml  { render :xml => @node.errors, :status => :unprocessable_entity }
+        format.json  { render :json => @job.errors, :status => :unprocessable_entity }         
       end
     end
   end
@@ -87,6 +97,8 @@ class NodesController < ApplicationController
       format.xml  { head :ok }
     end
   end
+  
+  
   
 private
 

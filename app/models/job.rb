@@ -75,6 +75,7 @@ class Job < ActiveRecord::Base
   aasm_state :pending
   aasm_state :launch_pending     
   aasm_state :launching_instances
+  aasm_state :waiting_for_nodes
   aasm_state :configuring_cluster
   aasm_state :waiting_for_jobs
   aasm_state :running_job, :enter => :set_start_time # instances launched
@@ -93,8 +94,10 @@ class Job < ActiveRecord::Base
   
   aasm_event :nextstep do
     transitions :to => :launch_pending, :from => [:pending]     
-    transitions :to => :launching_instances, :from => [:launch_pending]  
-    transitions :to => :configuring_cluster, :from => [:launching_instances] 
+    transitions :to => :launching_instances, :from => [:launch_pending] 
+     
+    transitions :to => :waiting_for_nodes, :from => [:launching_instances]     
+    transitions :to => :configuring_cluster, :from => [:waiting_for_nodes] 
     transitions :to => :running_job, :from => [:configuring_cluster]
     transitions :to => :running_job, :from => [:waiting_for_jobs]
     transitions :to => :shutdown_requested, :from => [:running_job]  
@@ -120,6 +123,7 @@ class Job < ActiveRecord::Base
   aasm_event :cancel do
     transitions :to => :cancellation_requested, 
     :from => [
+      :waiting_for_nodes,
       :configuring_cluster, 
       :running_job, 
       :waiting_for_jobs
@@ -132,6 +136,7 @@ class Job < ActiveRecord::Base
       :pending,
       :launch_pending, 
       :launching_instances,
+      :waiting_for_nodes,
       :configuring_cluster, 
       :running_job,
       :waiting_for_jobs,
@@ -155,6 +160,7 @@ class Job < ActiveRecord::Base
 
   def is_cancellable?
     cancellable_states = [
+      "waiting_for_nodes",
       "configuring_cluster",
       "waiting_for_jobs",
       "running_job"
@@ -189,9 +195,9 @@ class Job < ActiveRecord::Base
          self.worker_security_group, bootscript)              
       end
   
-      self.set_progress_message("configuring cluster")      
+      self.set_progress_message("configuring nodes")      
       self.nextstep!  # launching_instances -> configuring_cluster
-      puts "All nodes booted successfully, configuring cluster"       
+      puts "All nodes booted successfully, configuring nodes"       
     rescue Exception 
       self.error! # launching_instances -> terminating_due_to_error
       raise

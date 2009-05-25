@@ -77,6 +77,7 @@ class JobsController < ApplicationController
     respond_to do |format|
       if @job.update_attributes(params[:job])
         flash[:notice] = 'Job was successfully updated.'
+
         format.html { redirect_to(@job) }
         format.xml  { head :ok }
         format.json  { head :ok }    
