@@ -70,7 +70,7 @@ class NodesController < ApplicationController
     respond_to do |format|
       if @node.update_attributes(params[:node])
         @ready_nodes = @job.nodes.find(:all, :conditions => {:is_configured => true })
-        if @ready_nodes.count == @job.number_of_instances and @job.state == "waiting_for_nodes"
+        if @ready_nodes.size == @job.number_of_instances and @job.state == "waiting_for_nodes"
           @job.nextstep!  # waiting_for_nodes - > configuring_cluster
           puts "All nodes report ready, configuring cluster"
         end        

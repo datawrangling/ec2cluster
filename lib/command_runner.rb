@@ -126,14 +126,6 @@ puts is_master
 # is_configured (boolean)
 # boolean
 
-def clusterstatus
-  @job = Job.find(params[:id])
-  configured_count = @job.nodes.count(:all, :conditions => {:is_configured => true })
-  if configured_count == @job.number_of_instances:
-    return 'ready'
-  else
-    return '#{configured_count} of #{@job.number_of_instances} nodes configured'   
-end
 
 
 

@@ -207,7 +207,7 @@ class Job < ActiveRecord::Base
   
   def boot_nodes(nodecount, ami, security_group, bootscript)
     running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})
-    number_to_start = nodecount - running_nodes.count
+    number_to_start = nodecount - running_nodes.size
      
     node_descriptions = @ec2.run_instances(image_id=self.worker_ami_id, min_count=number_to_start,
           max_count=number_to_start, group_ids=[APP_CONFIG['web_security_group'], security_group],
@@ -222,10 +222,10 @@ class Job < ActiveRecord::Base
     end
     puts "Waiting for nodes to boot"
     running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})      
-    until running_nodes.count == nodecount do
+    until running_nodes.size == nodecount do
        refresh_node_data_from_ec2(nodes.find(:all))
        running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})
-       self.set_progress_message("#{running_nodes.count} of #{self.number_of_instances} started") 
+       self.set_progress_message("#{running_nodes.size} of #{self.number_of_instances} started") 
        sleep 5         
     end
     return running_nodes
@@ -252,10 +252,10 @@ class Job < ActiveRecord::Base
       @ec2.terminate_instances(running_instance_ids)
       terminated_nodes = self.nodes.find(:all, :conditions => {:aws_state => "terminated" })
       # Loop until all nodes are terminated...
-      until terminated_nodes.count == self.number_of_instances do
+      until terminated_nodes.size == self.number_of_instances do
          refresh_node_data_from_ec2(running_nodes)
          terminated_nodes = self.nodes.find(:all, :conditions => {:aws_state => "terminated" })
-         self.set_progress_message("#{terminated_nodes.count} of #{self.number_of_instances} terminated") 
+         self.set_progress_message("#{terminated_nodes.size} of #{self.number_of_instances} terminated") 
          sleep 5         
       end 
       # Nodes are now terminated, delete associated EC2 security groups: 
