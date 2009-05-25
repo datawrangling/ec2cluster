@@ -55,7 +55,6 @@ class JobsController < ApplicationController
         @job.nextstep!  # pending - > launch_pending
         logger.debug( 'initiating background cluster launch...' )    
         # job state is now "launching_instances"...        
-        # @job.launch_cluster
         Delayed::Job.enqueue ClusterLaunchJob.new(@job)   
         flash[:notice] = 'Job was successfully submitted.'          
 
@@ -169,10 +168,6 @@ class JobsController < ApplicationController
     end
   end    
       
-  
-  
-  
-  
   
   # GET /jobs/refresh
   def refresh
