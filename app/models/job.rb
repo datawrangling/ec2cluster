@@ -168,6 +168,13 @@ class Job < ActiveRecord::Base
     return cancellable_states.include? self.state 
   end
 
+  def processors_per_node
+    # TODO: create a seperate model to hold this info
+    cpus = {"m1.small"=>1, "m1.large"=>2, 
+      "m1.xlarge"=>4, "c1.medium"=>2, "c1.xlarge"=>8}
+    return cpus[self.instance_type]
+  end
+
 
   def launch_cluster
     puts 'background cluster launch initiated...' 

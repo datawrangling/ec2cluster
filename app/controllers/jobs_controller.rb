@@ -170,6 +170,51 @@ class JobsController < ApplicationController
   end    
       
   
+  # custom actions for MPI cluster config files... 
+  # TODO: move cpu logic out to new model for EC2 instance types. 
+  
+  # GET /jobs/1/hosts
+  def hosts
+    @job = Job.find(params[:id])
+    host_array = []
+    @job.nodes.each do |node|
+      host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]}"
+    end
+    send_data host_array.join("\n"), :type => 'text/html; charset=utf-8'
+  end  
+      
+      
+  # GET /jobs/1/openmpi_hostfile
+  def openmpi_hostfile
+    # hostfile for OpenMPI clusters
+    # node001 slots=2
+    # node002 slots=2
+    @job = Job.find(params[:id])
+    cpu_count = @job.processors_per_node
+    host_array = []
+    @job.nodes.each do |node|
+      host_array << "#{node.private_dns_name.split('.')[0]} slots=#{cpu_count}"
+    end
+    send_data host_array.join("\n"), :type => 'text/html; charset=utf-8'
+  end
+  
+  # GET /jobs/1/mpich2_machinefile
+  def mpich2_machinefile
+    # machine file for MPICH2 clusters
+    # node001:2
+    # node002:2
+    @job = Job.find(params[:id])
+    cpu_count = @job.processors_per_node    
+    host_array = []
+    @job.nodes.each do |node|
+      host_array << "#{node.private_dns_name.split('.')[0]}:#{cpu_count}"
+    end
+    send_data host_array.join("\n"), :type => 'text/html; charset=utf-8'
+  end        
+      
+      
+  # Custom action for AJAX page refresh    
+  
   # GET /jobs/refresh
   def refresh
     @jobs = Job.paginate :page => params[:page], :order => 'created_at DESC', :per_page =>10
