@@ -74,3 +74,10 @@ $ cap deploy:cold
 5) Use the admin login you set in config.yml to access the dashboard from a web browser or as web service:
 
 https://ec2-12-xx-xx-xx.z-1.compute-1.amazonaws.com
+
+
+If you change routes, or other code that requires a reload, issue the following or it won't get picked up by the mongrels:
+
+$ cap ec2onrails:server:restart_services
+$ cap deploy:restart
+

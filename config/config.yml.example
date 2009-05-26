@@ -1,10 +1,11 @@
 development:
   rails_application_port: 3000
+  repository: "git://github.com/datawrangling/elasticwulf-service.git"
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
   web_security_group: 'default'
-  default_master_ami_id: ami-ef48af86
-  default_worker_ami_id: ami-ef48af86
+  default_master_ami_id: ami-bf5eb9d6
+  default_worker_ami_id: ami-bf5eb9d6
   default_instance_type: m1.small
   default_availability_zone: us-east-1c
   default_mpi_version: openmpi
@@ -16,11 +17,12 @@ development:
 
 test:
   rails_application_port: 3000
+  repository: "git://github.com/datawrangling/elasticwulf-service.git"
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
   web_security_group: 'default'
-  default_master_ami_id: ami-ef48af86
-  default_worker_ami_id: ami-ef48af86
+  default_master_ami_id: ami-bf5eb9d6
+  default_worker_ami_id: ami-bf5eb9d6
   default_instance_type: c1.medium
   default_availability_zone: us-east-1c
   default_mpi_version: openmpi
@@ -32,11 +34,12 @@ test:
 
 production:
   rails_application_port: 3000
-  aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
+  repository: "git://github.com/datawrangling/elasticwulf-service.git"
+  aws_access_key_id: 1233KNMKNDSVNDKNVDVD
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
   web_security_group: 'default'
-  default_master_ami_id: ami-ef48af86
-  default_worker_ami_id: ami-ef48af86
+  default_master_ami_id: ami-bf5eb9d6
+  default_worker_ami_id: ami-bf5eb9d6
   default_instance_type: c1.medium
   default_availability_zone: us-east-1c
   default_mpi_version: openmpi
