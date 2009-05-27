@@ -193,7 +193,7 @@ class Job < ActiveRecord::Base
       @masternode = boot_nodes(nodecount=1, ami=self.master_ami_id,
        security_group=self.master_security_group, bootscript=bootscript_content)      
       self.set_master_instance_metadata(@masternode[0])  
-      puts "Master node booted"      
+      puts "Master node booting"      
       if self.number_of_instances > 1
         puts "Launching worker nodes"   
         self.set_progress_message("launching worker nodes")
@@ -213,8 +213,10 @@ class Job < ActiveRecord::Base
   
   
   def boot_nodes(nodecount, ami, security_group, bootscript)
-    running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})
-    number_to_start = nodecount - running_nodes.size
+    # nodes could be running or pending...
+    # running_nodes = self.nodes.find(:all, :conditions => {:aws_state => "running"})
+    launching_nodes = self.nodes.find(:all, :conditions => "aws_state = 'pending' OR aws_state = 'running'")
+    number_to_start = nodecount - launching_nodes.size
      
     node_descriptions = @ec2.run_instances(image_id=self.worker_ami_id, min_count=number_to_start,
           max_count=number_to_start, group_ids=[APP_CONFIG['web_security_group'], security_group],

@@ -151,7 +151,7 @@ curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d
 # generating a hosts file 
 # wait for /jobs/1/state to report 'configuring_cluster'
 
-while [ $JOB_STATE != "configuring_cluster" ]
+while [[ "$JOB_STATE" =~ "waiting" ]]
 do
 sleep 5
 JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
