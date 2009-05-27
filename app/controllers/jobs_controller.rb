@@ -177,11 +177,7 @@ class JobsController < ApplicationController
     @job = Job.find(params[:id])
     host_array = []
     @job.nodes.each do |node|
-      if node.aws_groups.include? 'master'
-        host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]} master"
-      else
-        host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]}"
-      end
+      host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]}"
     end
     send_data host_array.join("\n"), :type => 'text/html; charset=utf-8'
   end  
@@ -244,7 +240,11 @@ class JobsController < ApplicationController
     
   end
       
-      
+  # GET /jobs/1/masterhostname      
+  def masterhostname   
+    @job = Job.find(params[:id])
+    send_data "#{@job.master_hostname.split('.')[0]}", :type => 'text/html; charset=utf-8'    
+  end   
       
   # Custom action for AJAX page refresh    
   # GET /jobs/refresh

@@ -163,6 +163,8 @@ curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/hosts >> /etc/h
 sed -i -e 's/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g' /etc/ssh/ssh_config
 /etc/init.d/ssh restart
 
+MASTER_HOSTNAME=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/masterhostname`
+
 # mount NFS home dir on worker nodes 
 if $IS_MASTER ; then
   echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
@@ -172,7 +174,7 @@ if $IS_MASTER ; then
   sleep 10
 else
   apt-get -y install portmap nfs-common
-  mount master:/mnt/elasticwulf /mnt/elasticwulf
+  mount ${MASTER_HOSTNAME}:/mnt/elasticwulf /mnt/elasticwulf
 fi
 
 # get total number of cpus in cluster from REST action
