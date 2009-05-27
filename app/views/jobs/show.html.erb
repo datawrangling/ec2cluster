@@ -173,12 +173,13 @@
 <h2>Cluster Nodes:</h2>
 <table>
 <tr>
-  <th>Aws instance</th>
-  <th>Aws state</th>
+  <th>instance</th>
+  <th>state</th>
   <th>Dns name</th>
   <th>Private dns name</th>
-  <th>Aws launch time</th>
-  <th>Is configured</th>  
+  <th>launch time</th>
+  <th>Is configured</th>
+  <th>NFS mounted</th>    
 </tr>
 
 <% @job.nodes.each do |n| %>  
@@ -189,6 +190,7 @@
     <td><%=h n.private_dns_name %></td>
     <td><%=h n.aws_launch_time %></td>
     <td><%=h n.is_configured.to_s %></td>
+    <td><%=h n.nfs_mounted.to_s %></td>    
   </tr>
 <% end %> 
 
