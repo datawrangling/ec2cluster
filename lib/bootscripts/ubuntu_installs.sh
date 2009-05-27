@@ -167,6 +167,7 @@ MASTER_HOSTNAME=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id
 
 # mount NFS home dir on worker nodes 
 if [[ "$SECURITY_GROUPS" =~ "master" ]]
+then  
   echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
   # fetch openmpi_hostfile from jobs url
   su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
