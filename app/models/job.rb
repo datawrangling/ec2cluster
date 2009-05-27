@@ -310,7 +310,8 @@ class Job < ActiveRecord::Base
     node.aws_instance_type = node_description[:aws_instance_type]
     node.aws_launch_time = node_description[:aws_launch_time]
     node.aws_availability_zone = node_description[:aws_availability_zone]
-    node.is_configured = false if node.is_configured.nil?   
+    node.is_configured = false if node.is_configured.nil? 
+    node.nfs_mounted = false if node.nfs_mounted.nil?       
     node.save
   end         
          
