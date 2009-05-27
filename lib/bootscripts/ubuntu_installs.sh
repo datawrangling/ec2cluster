@@ -84,8 +84,10 @@ apt-get -y install r-cran-rmpi r-cran-snow
 # configure NFS on master node and set up keys
 # master security group has the format: 8-elasticwulf-master-052609-0823PM 
 SECURITY_GROUPS=`wget -q -O - http://169.254.169.254/latest/meta-data/security-groups`
-IS_MASTER=`echo $SECURITY_GROUPS | gawk '{ a = match ($0, "-master\\>"); if (a) print "true"; else print "false"; }'`
-if $IS_MASTER ; then
+
+if [[ "$SECURITY_GROUPS" =~ "master" ]]
+then
+  echo "Node is master, installing nfs server"
   sudo apt-get -y install nfs-kernel-server
   echo '/mnt/elasticwulf *(rw,sync)' >> /etc/exports
   /etc/init.d/nfs-kernel-server restart
@@ -100,11 +102,9 @@ if $IS_MASTER ; then
   su - elasticwulf -c "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys"
   su - elasticwulf -c "chmod 700 ~/.ssh"
   su - elasticwulf -c "chmod 600 ~/.ssh/*"
-
 else
   echo 'node is a worker, skipping NFS export step'
 fi
-
 
 # see http://cran.r-project.org/web/views/HighPerformanceComputing.html
 # http://cran.r-project.org/web/packages/Rmpi/index.html
@@ -166,7 +166,7 @@ sed -i -e 's/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g' /etc/ssh/
 MASTER_HOSTNAME=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/masterhostname`
 
 # mount NFS home dir on worker nodes 
-if $IS_MASTER ; then
+if [[ "$SECURITY_GROUPS" =~ "master" ]]
   echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
   # fetch openmpi_hostfile from jobs url
   su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
