@@ -172,11 +172,13 @@ then
   echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
   # fetch openmpi_hostfile from jobs url
   su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
-  while [[ "$JOB_STATE" =~ "mounting" ]]
+  WORKER_NODES=`wc -l openmpi_hostfile  | cut --delimiter=' ' -f 1`
+  MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
+  while [ $MOUNTED_NODES -lt $WORKER_NODES ]
   do
   echo "Waiting for worker nfs mounts..."  
   sleep 5
-  JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
+  MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
   done  
   echo "All workers have mounted NFS home directory, cluster is ready for MPI jobs"
 else
