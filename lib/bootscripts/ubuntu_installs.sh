@@ -1,9 +1,11 @@
 #!/bin/bash
-# ubuntu MPI cluster installs and config https://help.ubuntu.com/community/MpichCluster
-# this script is kicked off as root within /home/elasticwulf on the master node
+# ubuntu MPI cluster installs
+# this script is kicked off as root within /home/elasticwulf on all nodes 
 
 # TODO: check if any installs need to be modified for 64 bit vs. 32 bit amis
 # information can be obtained by curl of instance metadata.
+
+# TODO: add option for alternate MPI library (lam, mpich2, etc)
 
 aws_access_key_id=$1
 aws_secret_access_key=$2
@@ -29,9 +31,14 @@ echo '' >> /etc/sudoers
 echo '# Members of the admin group may gain root ' >> /etc/sudoers
 echo '%admin ALL=NOPASSWD:ALL' >> /etc/sudoers
 
-# version control
+# install basic unix tools
+apt-get -y install gawk curl
 apt-get -y install zip unzip rsync bzip2
-apt-get -y install curl subversion mercurial git-core cvs
+
+# version control
+apt-get -y install subversion mercurial git-core cvs
+
+# Amazon related tools
 apt-get -y install s3cmd ec2-ami-tools
 
 # MPI related
@@ -53,7 +60,7 @@ cd ../
 rm rubygems-1.3.1.tgz
 rm -R rubygems-1.3.1
 
-
+# Gems needed for command runner
 gem install right_http_connection --no-rdoc --no-ri
 gem install right_aws --no-rdoc --no-ri
 gem install activeresource --no-ri --no-rdoc
@@ -61,12 +68,49 @@ gem install activeresource --no-ri --no-rdoc
 # R & octave installs
 apt-get -y install r-base r-base-core
 apt-get -y install r-base-dev r-base-html r-base-latex r-cran-date octave3.0
+
 # basic HPC R packages, 
 apt-get -y install r-cran-rmpi r-cran-snow
+
+# TODO install user packages, get them from a custom action url for the job
+# USER_PACKAGES=''
+# 
+# if [ "$USER_PACKAGES" != "" ]; then
+#   apt-get update
+#   apt-get -y install $USER_PACKAGES
+# fi
+
+
+# configure NFS on master node and set up keys
+# master security group has the format: 8-elasticwulf-master-052609-0823PM 
+SECURITY_GROUPS=`wget -q -O - http://169.254.169.254/latest/meta-data/security-groups`
+IS_MASTER=`echo $SECURITY_GROUPS | gawk '{ a = match ($0, "-master\\>"); if (a) print "true"; else print "false"; }'`
+if $IS_MASTER ; then
+  sudo apt-get -y install nfs-kernel-server
+  echo '/mnt/elasticwulf *(rw,sync)' >> /etc/exports
+  /etc/init.d/nfs-kernel-server restart
+
+  ############ ON MASTER NODE AS ELASTICWULF USER ############
+  #As the home directory of elasticwulf in all nodes is the same (/home/elasticwulf) ,
+  #there is no need to run these commands on all nodes.
+  #First we generate DSA key for elasticwulf (leaves passphrase empty):
+  su - elasticwulf -c "ssh-keygen -b 1024 -N '' -f ~/.ssh/id_dsa -t dsa -q"
+
+  #Next we add this key to authorized keys on master node:
+  su - elasticwulf -c "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys"
+  su - elasticwulf -c "chmod 700 ~/.ssh"
+  su - elasticwulf -c "chmod 600 ~/.ssh/*"
+
+else
+  echo 'node is a worker, skipping NFS export step'
+fi
+
 
 # see http://cran.r-project.org/web/views/HighPerformanceComputing.html
 # http://cran.r-project.org/web/packages/Rmpi/index.html
 # http://cran.r-project.org/web/packages/snow/index.html
+
+# smoke test of local mpi
 
 cat <<EOF >> /home/elasticwulf/hello.c
 #include <stdio.h>
@@ -89,22 +133,61 @@ EOF
 
 chown elasticwulf:elasticwulf /home/elasticwulf/hello.c
 
-# Quick test of MPI
+# Quick test of local openmpi
 su - elasticwulf -c "mpicc /home/elasticwulf/hello.c -o /home/elasticwulf/hello" 
 ### check number of processors available
 # cat /proc/cpuinfo 
-su - elasticwulf -c "mpirun --mca btl ^openib -np 2 /home/elasticwulf/hello"
+su - elasticwulf -c "mpirun -np 2 /home/elasticwulf/hello > local_mpi_smoketest.txt"
 
-# TODO: will we have a client gem???
 
-# then we run a "GET" to get all the job properties for that id on the master node.
-# we can fetch the indicated files from s3, (the buckets should be owned by the same AWS key)
-# need to trigger /nextstep at start of job
-# then run the mpi command / bash script indicated,
-# finally, we send the output files up to the s3 bucket indicated
-# when that is complete, we trigger nextstep again.
+INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`
+# Get node id for instance
+NODE_ID=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/search?query=${INSTANCE_ID}`
 
-#  s3.put(bucket_name, 'S3keyname.forthisfile',  File.open('localfilename.dat'))
+# Send REST PUT to node url, signaling that node is ready 
+curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"is_configured":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
+
+# have to wait in loop for all nodes to start before
+# generating a hosts file 
+# wait for /jobs/1/state to report 'configuring_cluster'
+
+while [ $JOB_STATE != "configuring_cluster" ]
+do
+sleep 5
+JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
+done
+
+### Set up hosts file on each node. hostsfile will only be ready after all child nodes start booting.
+chmod go-w /mnt/elasticwulf
+curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/hosts >> /etc/hosts
+sed -i -e 's/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g' /etc/ssh/ssh_config
+/etc/init.d/ssh restart
+
+# mount NFS home dir on worker nodes 
+if $IS_MASTER ; then
+  echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
+  # fetch openmpi_hostfile from jobs url
+  su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
+  # TODO replace this with more intelligent status check
+  sleep 10
+else
+  apt-get -y install portmap nfs-common
+  mount master:/mnt/elasticwulf /mnt/elasticwulf
+fi
+
+# get total number of cpus in cluster from REST action
+CPU_COUNT=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/cpucount`
+
+# quick smoke test of multinode openmpi run, 
+su - elasticwulf -c "mpirun -np $CPU_COUNT /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
+
+# TODO: kick off ruby command_runner.rb script
+
+
+
+
+
+
 
 
 

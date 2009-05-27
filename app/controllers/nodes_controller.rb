@@ -68,6 +68,7 @@ class NodesController < ApplicationController
     @node = @job.nodes.find(params[:id])
     
     respond_to do |format|
+      # When all nodes report ready, a nextstep action is triggered on the job.
       if @node.update_attributes(params[:node])
         @ready_nodes = @job.nodes.find(:all, :conditions => {:is_configured => true })
         if @ready_nodes.size == @job.number_of_instances and @job.state == "waiting_for_nodes"

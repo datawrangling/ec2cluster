@@ -170,19 +170,28 @@ class JobsController < ApplicationController
   end    
       
   
-  # custom actions for MPI cluster config files... 
-  # TODO: move cpu logic out to new model for EC2 instance types. 
+  # Custom actions for MPI cluster config files, convenience methods that return plain text 
   
   # GET /jobs/1/hosts
   def hosts
     @job = Job.find(params[:id])
     host_array = []
     @job.nodes.each do |node|
-      host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]}"
+      if node.aws_groups.include? 'master'
+        host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]} master"
+      else
+        host_array << "#{node.private_dns_name} #{node.private_dns_name.split('.')[0]}"
+      end
     end
     send_data host_array.join("\n"), :type => 'text/html; charset=utf-8'
   end  
       
+  # GET /jobs/1/cpucount
+  def cpucount
+    @job = Job.find(params[:id])
+    cpucount = @job.processors_per_node * @job.number_of_instances 
+    send_data "#{cpucount}", :type => 'text/html; charset=utf-8'     
+  end    
       
   # GET /jobs/1/openmpi_hostfile
   def openmpi_hostfile
@@ -213,8 +222,31 @@ class JobsController < ApplicationController
   end        
       
       
+  # Custom action to find node id given instance-id
+  # GET jobs/${job_id}/search?query=${INSTANCE_ID}
+  def search
+    @job = Job.find(params[:id])
+    node = @job.nodes.find(:first, :conditions => {:aws_instance_id => params["query"] })
+    puts params["query"]
+    puts node.id
+    send_data "#{node.id}", :type => 'text/html; charset=utf-8'
+  end
+      
+  # GET /jobs/1/state
+  def state
+    @job = Job.find(params[:id])
+    
+    respond_to do |format|
+      format.html { send_data "#{@job.state}", :type => 'text/html; charset=utf-8' }
+      format.xml  { render :xml => @job }
+      format.json  { render :json => @job }
+    end    
+    
+  end
+      
+      
+      
   # Custom action for AJAX page refresh    
-  
   # GET /jobs/refresh
   def refresh
     @jobs = Job.paginate :page => params[:page], :order => 'created_at DESC', :per_page =>10
