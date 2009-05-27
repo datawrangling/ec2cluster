@@ -70,11 +70,26 @@ class NodesController < ApplicationController
     respond_to do |format|
       # When all nodes report ready, a nextstep action is triggered on the job.
       if @node.update_attributes(params[:node])
-        @ready_nodes = @job.nodes.find(:all, :conditions => {:is_configured => true })
-        if @ready_nodes.size == @job.number_of_instances and @job.state == "waiting_for_nodes"
-          @job.nextstep!  # waiting_for_nodes - > configuring_cluster
-          puts "All nodes report ready, configuring cluster"
-        end        
+        if @job.state == "waiting_for_nodes"
+          
+          # check if all nodes have finished installs/configuration
+          @ready_nodes = @job.nodes.find(:all, :conditions => {:is_configured => true })
+          if @ready_nodes.size == @job.number_of_instances
+            @job.nextstep!  # waiting_for_nodes - > mounting_nfs
+            puts "All nodes have reported ready, configuring cluster host file and starting NFS mounts"
+          end
+               
+        elsif @job.state == "mounting_nfs"  
+          # check if all nodes have mounted NFS home directory
+          # TODO insert logic to flip nfs_mounted flag here 
+          @mounted_nodes = @job.nodes.find(:all, :conditions => {:nfs_mounted => true })
+          if @mounted_nodes.size == @job.number_of_instances
+            @job.nextstep!  # mounting_nfs - > configuring_cluster
+            puts "All nodes mounted NFS volumes, cluster ready for MPI jobs"
+          end          
+          
+              
+        end  
         flash[:notice] = 'Node was successfully updated.'
         format.html { redirect_to job_url(@job) }
         format.xml  { head :ok }

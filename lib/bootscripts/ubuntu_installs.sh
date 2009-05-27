@@ -81,6 +81,10 @@ apt-get -y install r-cran-rmpi r-cran-snow
 # fi
 
 
+INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`
+# Get node id for instance
+NODE_ID=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/search?query=${INSTANCE_ID}`
+
 # configure NFS on master node and set up keys
 # master security group has the format: 8-elasticwulf-master-052609-0823PM 
 SECURITY_GROUPS=`wget -q -O - http://169.254.169.254/latest/meta-data/security-groups`
@@ -91,6 +95,8 @@ then
   sudo apt-get -y install nfs-kernel-server
   echo '/mnt/elasticwulf *(rw,sync)' >> /etc/exports
   /etc/init.d/nfs-kernel-server restart
+  # Send REST PUT to node url, signaling that NFS is ready on node..
+  curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
 
   ############ ON MASTER NODE AS ELASTICWULF USER ############
   #As the home directory of elasticwulf in all nodes is the same (/home/elasticwulf) ,
@@ -139,11 +145,6 @@ su - elasticwulf -c "mpicc /home/elasticwulf/hello.c -o /home/elasticwulf/hello"
 # cat /proc/cpuinfo 
 su - elasticwulf -c "mpirun -np 2 /home/elasticwulf/hello > local_mpi_smoketest.txt"
 
-
-INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`
-# Get node id for instance
-NODE_ID=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/search?query=${INSTANCE_ID}`
-
 # Send REST PUT to node url, signaling that node is ready 
 curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"is_configured":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
 
@@ -171,18 +172,25 @@ then
   echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
   # fetch openmpi_hostfile from jobs url
   su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
-  # TODO replace this with more intelligent status check
-  sleep 10
+  while [[ "$JOB_STATE" =~ "mounting" ]]
+  do
+  echo "Waiting for worker nfs mounts..."  
+  sleep 5
+  JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
+  done  
+  echo "All workers have mounted NFS home directory, cluster is ready for MPI jobs"
 else
   apt-get -y install portmap nfs-common
   mount ${MASTER_HOSTNAME}:/mnt/elasticwulf /mnt/elasticwulf
+  # Send REST PUT to node url, signaling that NFS is ready on node..
+  curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}  
 fi
 
 # get total number of cpus in cluster from REST action
 CPU_COUNT=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/cpucount`
 
 # quick smoke test of multinode openmpi run, 
-su - elasticwulf -c "mpirun -np $CPU_COUNT /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
+su - elasticwulf -c "mpirun -np $CPU_COUNT --hostfile /home/elasticwulf/openmpi_hostfile /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
 
 # TODO: kick off ruby command_runner.rb script
 
