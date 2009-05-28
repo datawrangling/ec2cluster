@@ -1,0 +1,126 @@
+h1. Elasticwulf Service 
+
+Rails web dashboard with REST API for launching MPI clusters on Amazon EC2 and running user submitted batch jobs
+
+h3. Features
+
+* feature 1
+* feature 2
+
+h2. Running MPI jobs on EC2
+
+overview goes here, workflow, s3 inputs, commands.
+
+
+h3. Submitting jobs with the web dashboard
+
+instructions go here
+
+
+h3. Submitting jobs to the REST API
+
+instructions go here
+
+h4. Sample Ruby client kmeans example
+
+h4. Rmpi example
+
+
+h2. Dependencies
+
+dependencies will go here (rails, ec2onrails, capistrano, Amazon EC2/S3 setup)
+
+h2. Installation
+
+fetching the source code instructions will go here
+
+h2. Deploying to EC2
+
+
+Install the ec2onrails gem as described at http://ec2onrails.rubyforge.org/:
+<pre>	$ sudo gem install ec2onrails </pre>
+Find AMI id of the latest 32 bit ec2onrails image (in our case this was ami-5394733a):
+<pre>	$ cap ec2onrails:ami_ids</pre>
+
+Launch an instance of the latest ec2onrails ami and note the returned instance address from ec2-describe-instances, it will be something like ec2-12-xx-xx-xx.z-1.compute-1.amazonaws.com 
+<pre>
+	$ ec2-run-instances ami-5394733a -k gsg-keypair
+	$ ec2-describe-instances
+</pre>
+Create the needed configuration files from the provided examples and edit them, filling in your instance address information, keypairs, and other configuration information as indicated in the comments of each file. See the ec2onrails documentation or source code for more details on each setting.  If you want to make changes to the elasticwulf code, be sure to replace the base github repository in deploy.rb and config.yml with your own github location.
+<pre>
+	$ cp config/deploy.rb.example config/deploy.rb
+	$ cp config/s3.yml.example config/s3.yml
+	$ cp config/config.yml.example config/config.yml
+	$ cp config/database.yml.example config/database.yml	
+</pre>	
+Be sure to substitute in your own AWS key and secret key in both config.yml and s3.yml
+<pre>
+	aws_secret_access_key: YYVUYVIUBIBI
+	aws_access_key_id: BBKBBOUjbkj/BBOUBOBJKBjbjbboubuBUB
+</pre>
+Also replace the admin user name and password in config.yml:
+<pre>
+	admin_user: REPLACE_ME
+	admin_password: REPLACE_ME
+</pre>
+This application should be run under SSL and the access should be restricted to only trusted application ip addresses using EC2 security group filters.  Ideally, your client application is also running on EC2 in the same security group.
+
+Deploy the app to your launched EC2 instance with Capistrano (this wil take several minutes)
+<pre>
+    $ cap ec2onrails:setup
+    $ cap deploy:cold
+</pre>
+Use the admin login information you set in config.yml to access the dashboard from a web browser or as web service at the url of the instance you provided in deploy.rb: https://ec2-12-xx-xx-xx.z-1.compute-1.amazonaws.com . You can also ssh into your running EC2 instance as usual with your keypairs to debug any issues.  See the ec2onrails forums for more help debugging deployment issues.
+
+To redeploy the app after making changes to the base elasticwulf code (this will also restart the delayed_job services which launch and terminate EC2 clusters):
+<pre>
+    $ cap deploy
+</pre>
+To manually restart the apache service or mongrels:
+<pre>
+    $ cap ec2onrails:server:restart_services
+    $ cap deploy:restart
+</pre>
+
+h2. Running a development version locally
+
+Unless your local machine's ip address and rails port is publicly reachable, local runs will not function properly (the cluster nodes need to communicate with the rails app).
+
+Do the normal rails gem install dance for any missing dependencies
+<pre>
+	$ rake gems:install
+</pre>
+
+Create the database
+<pre>
+    $ rake db:create
+    $ rake db:migrate
+</pre>
+
+Launch the rails app itself 
+<pre>
+	$ script/server 
+	=> Booting Mongrel
+	=> Rails 2.3.2 application starting on http://0.0.0.0:3000
+	=> Call with -d to detach
+	=> Ctrl-C to shutdown server
+</pre>
+	
+Launch a background delayed_job worker in a separate terminal window
+<pre>
+	$ rake jobs:work
+	(in /Users/pskomoroch/rails_projects/elasticwulf-service)
+	*** Starting job worker host:72-63-103-214.pools.spcsdns.net pid:12221
+	background cluster launch initiated...
+	1 jobs processed at 0.0498 j/s, 0 failed ...
+	background cluster shutdown initiated...
+	1 jobs processed at 0.0499 j/s, 0 failed ...
+	background cluster launch initiated...
+</pre>
+
+Navigate to http://localhost:3000/ to use the web UI or submit REST requests
+
+
+
+
