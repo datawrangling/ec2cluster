@@ -12,7 +12,7 @@
     <%= f.text_field :name %> 
   </p>
   <p>
-    <%= f.label :input_files %> <i>(s3://foo/mpi.bin s3://foo/script.sh)</i><br />
+    <%= f.label :input_files %> <i>(mybucket/folder/mpi.bin mybucket/folder/script.sh)</i><br />
     <%= f.text_area :input_files, :cols => 40, :rows => 2 %>
   </p>  
   <p>
@@ -39,12 +39,12 @@
   </p>
   <p>
     <%= f.label :mpi_version %><br />
-    <%= f.text_field :mpi_version %>
+    <%= f.text_field :mpi_version, :value => APP_CONFIG['default_mpi_version'] %>
   </p>  
   </td>
   <td width="30%" valign="top">
   <p>
-    <%= f.label :output_path %> <i>(s3://mybucket/outputfolder)</i><br />
+    <%= f.label :output_path %> <i>(mybucket/outputfolder)</i><br />
     <%= f.text_field :output_path %>
   </p>
   <p>

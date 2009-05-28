@@ -106,6 +106,15 @@ To manually restart the apache service or mongrels:
     $ cap ec2onrails:server:restart_services
     $ cap deploy:restart
 </pre>
+To manually stop and start the delayed_job workers:
+<pre>
+	$ cap delayed_job:stop
+	$ cap delayed_job:start
+</pre>	
+To clear the job queue, ssh into the EC2 instance and run the following command from within <pre>/mnt/app/current</pre> (no rake task yet):
+<pre>
+	$ RAILS_ENV=production rake jobs:clear
+</pre>
 
 h2. Running a development version locally
 

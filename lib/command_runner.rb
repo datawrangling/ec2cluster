@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby 
 
-# command_runner.rb is only run on the master node of the cluster as the "elasticwulf" user from within the NFS home directory "/home/elasticwulf/".  It fetches input & code from s3, runs the job command, and uploads outputs to S3.  The job command it runs will typically be a bash script containing MPI commands run across the entire cluster using the input data fetched from S3 which is available to all nodes via NFS.
+# command_runner.rb NUMBER_OF_CPUS
+
+# This script is only run on the master node of the cluster as the "elasticwulf" user from within the NFS home directory "/home/elasticwulf/".  It fetches input & code from s3, runs the job command, and uploads outputs to S3.  The job command it runs will typically be a bash script containing MPI commands run across the entire cluster using the input data fetched from S3 which is available to all nodes via NFS.
 
 require 'rubygems'
 require 'activeresource'
@@ -15,8 +17,11 @@ require 'net/http'
 # rest_url: $rest_url
 # job_id: $job_id
 
+CPU_COUNT=ARGV[0]
+ENV['CPU_COUNT'] = CPU_COUNT
+
 CLUSTER_CONFIG = YAML.load_file("/home/elasticwulf/cluster_config.yml")
-puts CLUSTER_CONFIG['job_id']
+puts "job id: " + CLUSTER_CONFIG['job_id'].to_s
 
 # Create an ActiveResource connection to the Elasticwulf REST web service
 class Job < ActiveResource::Base
@@ -32,6 +37,7 @@ s3 = RightAws::S3Interface.new(CLUSTER_CONFIG['aws_access_key_id'],
 ############################
 # Fetch files from s3 to local working directory
 job.put(:updateprogress, :progress => 'downloading inputs from S3')
+puts job.progress
 @input_files = job.input_files.split   
 # TODO need to loop over inputs and fetch from s3.  will assume a prefix of s3:// 
  
@@ -66,7 +72,7 @@ s3.put('datawrangling', 'cluster_mpi_smoketest.txt',  File.open('/home/elasticwu
 
 # TODO: save logs to s3 before shutting down cluster
 
-job.put(:nextstep)  # Signal REST service, job state will transition from running_job -> shutdown_requested
+# job.put(:nextstep)  # Signal REST service, job state will transition from running_job -> shutdown_requested
 
 #############################
 

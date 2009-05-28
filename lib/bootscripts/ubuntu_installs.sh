@@ -190,7 +190,7 @@ then
   su - elasticwulf -c "mpirun -np $CPU_COUNT --hostfile /home/elasticwulf/openmpi_hostfile /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
 
   # kick off ruby command_runner.rb script (only on master node)
-  su - elasticwulf -c "ruby /home/elasticwulf/elasticwulf-service/lib/command_runner.rb"  
+  su - elasticwulf -c "ruby /home/elasticwulf/elasticwulf-service/lib/command_runner.rb $CPU_COUNT"  
   
   
 else
