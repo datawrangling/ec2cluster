@@ -16,15 +16,39 @@ h3. Submitting jobs with the web dashboard
 
 instructions go here
 
+h4. standard C fractal generation example
+
+todo
 
 h3. Submitting jobs to the REST API
 
-instructions go here
+API docs and instructions go here
 
 h4. Sample Ruby client kmeans example
 
-h4. Rmpi example
+todo
 
+h3. More code examples & applications
+
+h4. Rmpi example: 
+
+todo
+
+h4. psvm support vector machine example
+
+todo
+
+h4. Mpi4py example: monte carlo options pricing
+
+todo
+
+h4. Excel example: credit risk
+
+todo
+
+h4. Bioinformatics example: mpiblast
+
+todo
 
 h2. Dependencies
 
