@@ -1,6 +1,6 @@
-h1. Elasticwulf Service 
+h1. ElasticWulf-Service 
 
-Rails web dashboard with REST API for launching MPI clusters on Amazon EC2 and running user submitted batch jobs
+Elasticwulf-Service is a Rails Web Console that includes a REST API for launching on demand Beowulf clusters on Amazon EC2.  You can upload input data and code to Amazon S3, then submit a job request including how many nodes you want in your cluster.  Elasticwulf will spin up & configure a private beowulf cluster, process the data, upload the output results to an Amazon S3 bucket, and terminate the cluster when the job completes (termination is optional).  ElasticWulf-Service is like Amazon Elastic MapReduce, except it is uses MPI and REST instead of Hadoop and SOAP (and is open source).
 
 h3. Features
 
