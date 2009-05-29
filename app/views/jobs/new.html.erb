@@ -1,5 +1,5 @@
 <h2>Enter Your Job Parameters</h2>
-<%= link_to 'Back', jobs_path %> 
+<%= link_to 'Back', jobs_path %>
 <% form_for(@job) do |f| %>
   <%= f.error_messages %>
 
@@ -9,38 +9,20 @@
   <td width="40%" valign="top">
   <p>
     <%= f.label :name %><br />
-    <%= f.text_field :name, :value =>"Kmeans demo" %> 
+    <%= f.text_field :name, :cols => 40, :value =>"Kmeans demo" %> 
   </p>
   <p>
+    <%= f.label "Job Description"  %><br />
+    <%= f.text_field :description, :cols => 40, :rows => 1, :value => "Simple Kmeans C MPI example from http://www.ece.northwestern.edu/~wkliao/Kmeans/index.html" %>
+  </p>  
+  <p>
     <%= f.label :input_files %> <i>(mybucket/folder/mpi.bin mybucket/folder/script.sh)</i><br />
-    <%= f.text_area :input_files, :cols => 40, :rows => 2, :value =>"elasticwulf/samples/kmeans/input/color100.txt elasticwulf/samples/kmeans/code/Simple_Kmeans.zip elasticwulf/samples/kmeans/code/run_kmeans.sh" %>
+    <%= f.text_area :input_files, :cols => 40, :rows => 5, :value =>"elasticwulf/samples/kmeans/input/color100.txt elasticwulf/samples/kmeans/code/Simple_Kmeans.zip elasticwulf/samples/kmeans/code/run_kmeans.sh" %>
   </p>  
   <p>
     <%= f.label :commands %> <i>(bash script.sh)</i><br />
     <%= f.text_area :commands, :cols => 40, :rows => 2, :value =>"bash run_kmeans.sh" %>
   </p>
-  <p>
-    <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
-    <%= f.text_area :output_files, :cols => 40, :rows => 2, :value =>"color100.txt.membership color100.txt.cluster_centres" %>
-  </p>  
-  <br />
-  <hr />
-  <p>
-  <h2>Optional Parameters</h2></p>
-  </p>
-  
-  <p>
-    <%= f.label :log_path %><br />
-    <%= f.text_field :log_path %>
-  </p>
-  <p>
-    <%= f.label :ebs_volumes %><br />
-    <%= f.text_area :ebs_volumes, :cols => 40, :rows => 2 %>
-  </p>
-  <p>
-    <%= f.label :mpi_version %><br />
-    <%= f.text_field :mpi_version, :value => APP_CONFIG['default_mpi_version'] %>
-  </p>  
   </td>
   <td width="30%" valign="top">
   <p>
@@ -48,8 +30,8 @@
     <%= f.text_field :output_path, :value => "[MYBUCKET]/output/#{Time.now.strftime('%m%d%y%H%M')}/" %>
   </p>
   <p>
-    <%= f.label "Job Description"  %><br />
-    <%= f.text_field :description, :value => "Simple Kmeans C MPI example from http://www.ece.northwestern.edu/~wkliao/Kmeans/index.html" %>
+    <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
+    <%= f.text_area :output_files, :cols => 40, :rows => 2, :value =>"color100.txt.membership color100.txt.cluster_centres" %>
   </p>  
   <p>
     <%= f.label :number_of_instances %> <i>(integer)</i><br />
@@ -63,10 +45,7 @@
     <%= f.label :worker_ami_id %><br />
     <%= f.text_field :worker_ami_id, :value => APP_CONFIG['default_worker_ami_id']  %>
   </p>  
-  
   </td>
-
-
   <td width="30%" valign="top">
   <p>
     <%= f.label :instance_type %><br />
@@ -81,9 +60,13 @@
     <%= f.text_field :keypair, :value => APP_CONFIG['default_keypair'] %>
   </p>  
   <p>
+    <%= f.label :mpi_version %><br />
+    <%= f.text_field :mpi_version, :value => APP_CONFIG['default_mpi_version'] %>
+  </p>
+  <p>
     <%= f.label :shutdown_after_complete %><br />
     <%= f.check_box :shutdown_after_complete %>
-  </p>   
+  </p>  
   <p>
         <%= f.submit 'Create' %>
   </p>      

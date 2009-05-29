@@ -1,6 +1,6 @@
 h1. ElasticWulf-Service 
 
-Elasticwulf-Service is a Rails Web Console that includes a REST API for launching on demand Beowulf clusters on Amazon EC2.  You can upload input data and code to Amazon S3, then submit a job request including how many nodes you want in your cluster.  Elasticwulf will spin up & configure a private beowulf cluster, process the data, upload the output results to an Amazon S3 bucket, and terminate the cluster when the job completes (termination is optional).  ElasticWulf-Service is like Amazon Elastic MapReduce, except it is uses MPI and REST instead of Hadoop and SOAP (and is open source).
+Elasticwulf-Service is a Rails web console, including a REST API, that launches temporary Beowulf clusters on Amazon EC2 for parallel processing.  You upload input data and code to Amazon S3, then submit a job request including how many nodes you want in your cluster.  Elasticwulf will spin up & configure a private beowulf cluster, process the data in parallel across the nodes, upload the output results to an Amazon S3 bucket, and terminate the cluster when the job completes (termination is optional).  ElasticWulf-Service is like Amazon Elastic MapReduce, except it is uses MPI and REST instead of Hadoop and SOAP.  The source code is also free for use in both personal and commercial projects, released under the BSD license.
 
 h3. Features
 
@@ -80,6 +80,10 @@ todo
 h4. Bioinformatics example: mpiblast
 
 todo
+
+h2. Why use MPI? Why not Hadoop?
+
+If you can solve your problem with Hadoop, go for it.  If you are short on time, and MPI code exists that solves your problem, you might want to try Elasticwulf.  MPI has been around for a while and there are lots of existing libraries for a number of domains.  That said, debugging MPI jobs and dealing with node failure can be a hassle.  Reuse or reimplement, your choice.
 
 h2. Dependencies
 
