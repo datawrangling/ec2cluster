@@ -8,8 +8,9 @@
     <th>Started at</th>
     <th>Updated at</th>
     <th>Finished at</th>
-    <th>State</th>
+    <th>State</th>   
     <th>Progress</th>
+    <th></th>     
   </tr>
   <% @jobs.each do |job| %>
     <tr>
@@ -23,12 +24,15 @@
       <td><%=h job.finished_at.strftime('%m/%d %I:%M%p') unless job.finished_at.nil? %></td>
       <td><%=h job.state.gsub("_", " ") %></td>
       <td><%=h job.progress %></td>
-      <td><%= link_to 'Show', job %></td>
-      <td><%= link_to 'Cancel', cancel_job_path(job), :method => :put if job.is_cancellable?  %></td>    
+      <td><img height="16" src="http://datawrangling.s3.amazonaws.com/loadinfo.net.gif" width="16" /></td> 
+      <td><%= link_to 'Show', job %></td>               
+      <td><%= link_to 'Cancel', cancel_job_path(job), :method => :put if job.is_cancellable?  %></td>
     </tr>
   <% end %> 
 </table>
 
+
+#if state not in (failed, cancelled, complete) show spinner
 
 <% if @jobs.size.to_i > 0 %>
   <script type="text/javascript">
