@@ -13,7 +13,7 @@ admin_user=$3
 admin_password=$4
 rest_url=$5
 job_id=$6
-user_packages=$7
+user_packages="$7"
 
 cat <<EOF >> /home/elasticwulf/cluster_config.yml
 aws_access_key_id: $aws_access_key_id
