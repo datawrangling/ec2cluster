@@ -109,7 +109,11 @@ end
 #############################
 # Cleanup and exit, triggering cluster shutdown
 # TODO: save logs to s3 before shutting down cluster
-job.put(:nextstep)  # Signal REST service, job state will transition from running_job -> shutdown_requested
+puts "job.shutdown_after_complete"
+puts job.shutdown_after_complete
+if job.shutdown_after_complete == "true"
+  job.put(:nextstep)  # Signal REST service, job state will transition from running_job -> shutdown_requested
+else
 
 
 
