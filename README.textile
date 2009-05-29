@@ -14,7 +14,7 @@ overview goes here, workflow, s3 inputs, commands.
 
 h3. Submitting jobs with the web dashboard
 
-instructions go here
+instructions go here for kmeans example
 
 h4. standard C fractal generation example
 
@@ -22,11 +22,42 @@ todo
 
 h3. Submitting jobs to the REST API
 
+h4. API methods
+
 API docs and instructions go here
 
-h4. Sample Ruby client kmeans example
+h4. Sample Ruby client example
 
-todo
+todo repeat kmeans example
+
+h4. Curl examples
+
+Submit a new job request
+To submit a new job via a json request, you can post a JSON request to the REST api:
+
+REQUEST
+<pre>
+$ curl -H "Content-Type:application/json" -H "Accept:application/json" -d  \
+"{\"job\": {\"name\": \"My Json MPI job\", \"description\": \"test run of X\!Tandem\", \
+ \"user_id\": 2, \"number_of_instances\": 12, \"instance_type\": \"c1.medium\", \
+ \"input_files\": \"s3://mybucket/input/genome.txt s3://myfastabucket/somedata.fasta\", \
+ \"commands\": \"bash runtandem.sh\", \"output_files\": \"myoutput.txt\", \"output_path\":  \
+\"S3://myoutputbucket/myrunsfolder\"}}" http://localhost:3000/jobs
+</pre>
+
+Checking on job status via GET
+REQUEST
+<pre>
+$ curl http://localhost:3000/jobs/3.json
+</pre>
+
+Cancel a job request and shutdown the EC2 cluster
+REQUEST
+<pre>
+$ curl -H "Content-Type:application/json" -H "Accept: application/json" \ 
+-X PUT  http://localhost:3000/jobs/3/cancel 
+</pre>
+
 
 h3. More code examples & applications
 
