@@ -7,12 +7,12 @@ h3. Features
 * feature 1
 * feature 2
 
-h2. Running MPI jobs on EC2
+h2. Running MPI jobs on EC2 with Elasticwulf
 
 overview goes here, workflow, s3 inputs, commands.
 
 
-h3. Submitting jobs with the web dashboard
+h3. Using the Web dashboard
 
 instructions go here for kmeans example
 
@@ -20,7 +20,7 @@ h4. standard C fractal generation example
 
 todo
 
-h3. Submitting jobs to the REST API
+h3. Using the REST API
 
 h4. API methods
 

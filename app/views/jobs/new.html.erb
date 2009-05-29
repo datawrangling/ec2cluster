@@ -9,19 +9,19 @@
   <td width="40%" valign="top">
   <p>
     <%= f.label :name %><br />
-    <%= f.text_field :name %> 
+    <%= f.text_field :name, :value =>"Kmeans demo" %> 
   </p>
   <p>
     <%= f.label :input_files %> <i>(mybucket/folder/mpi.bin mybucket/folder/script.sh)</i><br />
-    <%= f.text_area :input_files, :cols => 40, :rows => 2 %>
+    <%= f.text_area :input_files, :cols => 40, :rows => 2, :value =>"elasticwulf/samples/kmeans/input/color100.txt elasticwulf/samples/kmeans/code/Simple_Kmeans.zip elasticwulf/samples/kmeans/code/run_kmeans.sh" %>
   </p>  
   <p>
     <%= f.label :commands %> <i>(bash script.sh)</i><br />
-    <%= f.text_area :commands, :cols => 40, :rows => 2 %>
+    <%= f.text_area :commands, :cols => 40, :rows => 2, :value =>"bash run_kmeans.sh" %>
   </p>
   <p>
     <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
-    <%= f.text_area :output_files, :cols => 40, :rows => 2 %>
+    <%= f.text_area :output_files, :cols => 40, :rows => 2, :value =>"color100.txt.membership color100.txt.cluster_centres" %>
   </p>  
   <br />
   <hr />
@@ -44,16 +44,16 @@
   </td>
   <td width="30%" valign="top">
   <p>
-    <%= f.label :output_path %> <i>(mybucket/outputfolder/) requires trailing slash</i><br />
-    <%= f.text_field :output_path %>
+    <%= f.label :output_path %> <i>(mybucket/outputfolder/) </i><br />
+    <%= f.text_field :output_path, :value => "[MYBUCKET]/output/#{Time.now.strftime('%m%d%y%H%M')}/" %>
   </p>
   <p>
     <%= f.label "Job Description"  %><br />
-    <%= f.text_field :description %>
+    <%= f.text_field :description, :value => "Simple Kmeans C MPI example from http://www.ece.northwestern.edu/~wkliao/Kmeans/index.html" %>
   </p>  
   <p>
     <%= f.label :number_of_instances %> <i>(integer)</i><br />
-    <%= f.text_field :number_of_instances %>
+    <%= f.text_field :number_of_instances, :value => "2" %>
   </p>  
   <p>
     <%= f.label :master_ami_id %><br />
