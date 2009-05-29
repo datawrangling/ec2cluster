@@ -216,7 +216,7 @@ class Job < ActiveRecord::Base
       end
   
       self.set_progress_message("configuring nodes")      
-      self.nextstep!  # launching_instances -> configuring_cluster
+      self.nextstep!  # launching_instances -> waiting_for_nodes
       puts "All nodes booted successfully, configuring nodes"       
     rescue Exception 
       self.error! # launching_instances -> terminating_due_to_error

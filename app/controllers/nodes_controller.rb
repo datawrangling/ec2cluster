@@ -86,7 +86,7 @@ class NodesController < ApplicationController
           # check if nfs_mounted is true for master node, if so - transition.            
           if @master_node.nfs_mounted
             @job.nextstep!  # exporting_master_nfs -> mounting_nfs
-            puts "Master node has exported NFS home, ready for worker nodes to begin mounting volume"
+            puts "Master node has exported NFS home, ready for worker nodes to begin mounting volume"            
           end                  
         elsif @job.state == "mounting_nfs"  
           # check if all nodes have mounted NFS home directory

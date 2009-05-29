@@ -76,15 +76,13 @@ apt-get -y install r-base-dev r-base-html r-base-latex r-cran-date octave3.0
 # http://cran.r-project.org/web/packages/snow/index.html
 apt-get -y install r-cran-rmpi r-cran-snow
 
-# python installs
-apt-get -y install python-boto python-imaging python-dateutil 
-# python numerical computing:
-apt-get -y install python-setuptools python-docutils 
-apt-get -y install python-support python-distutils-extra 
-apt-get -y install python-dev python-numpy python-numpy-ext python-scipy cython 
-# easy_install mpi4py #long install time, might want to comment out until prebuilt AMI is ready
-# # see http://ipython.scipy.org/doc/rel-0.9.1/html/parallel/index.html
-# apt-get -y install ipython
+# # python installs
+# apt-get -y install python-boto python-imaging python-dateutil 
+# # python numerical computing:
+# apt-get -y install python-setuptools python-docutils 
+# apt-get -y install python-support python-distutils-extra 
+# apt-get -y install python-dev python-numpy python-numpy-ext python-scipy cython 
+
 
 # install any user defined packages
 if [ "$user_packages" != "" ]; then
@@ -99,6 +97,7 @@ NODE_ID=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/search
 # master security group has the format: 8-elasticwulf-master-052609-0823PM 
 SECURITY_GROUPS=`wget -q -O - http://169.254.169.254/latest/meta-data/security-groups`
 
+# Job state is "waiting_for_nodes"
 # Send REST PUT to node url, signaling that node is ready 
 curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"is_configured":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
 
@@ -127,7 +126,7 @@ fi
 # while loop goes here, waiting for all nodes to be configured before starting the NFS mount...
 
 # have to wait in loop for all nodes to start
-while [[ "$JOB_STATE" =~ "waiting_for_nodes" ]]
+while [[ "$JOB_STATE" != "exporting_master_nfs"  ]]
 do
   sleep 5
   JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
