@@ -21,8 +21,8 @@ aws_secret_access_key: $aws_secret_access_key
 admin_user: $admin_user
 admin_password: $admin_password
 rest_url: $rest_url
-job_id: $job_id
 user_packages: $user_packages
+job_id: $job_id
 EOF
 
 chown elasticwulf:elasticwulf /home/elasticwulf/cluster_config.yml
