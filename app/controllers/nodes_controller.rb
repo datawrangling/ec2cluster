@@ -82,7 +82,7 @@ class NodesController < ApplicationController
           # trigger transition when nfs_mounted => true for master node...
           # find master node by checking if instance_id = master_instance_id, 
           master_instance_id = @job.master_instance_id
-          @master_node = @job.nodes.find(:one, :conditions => {:aws_instance_id => master_instance_id })
+          @master_node = @job.nodes.find(:first, :conditions => {:aws_instance_id => master_instance_id })
           # check if nfs_mounted is true for master node, if so - transition.            
           if @master_node.nfs_mounted
             @job.nextstep!  # exporting_master_nfs -> mounting_nfs

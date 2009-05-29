@@ -106,16 +106,20 @@ output_files.each do |file|
   upload_s3file(output_path, file, @s3handle)
 end
 
+job.put(:updateprogress, :progress => 'S3 uploads complete')
+
 #############################
 # Cleanup and exit, triggering cluster shutdown
 # TODO: save logs to s3 before shutting down cluster
 puts "job.shutdown_after_complete"
 puts job.shutdown_after_complete
 if job.shutdown_after_complete
+  job.put(:updateprogress, :progress => 'triggering shutdown')  
   job.put(:nextstep)  # Signal REST service, job state will transition from running_job -> shutdown_requested
 else
   # job should transition to waiting state...
   job.put(:wait)   
+  job.put(:updateprogress, :progress => 'finished')
 end
 puts "Command run complete, files uploaded.  Job state is: " + job.state
 
