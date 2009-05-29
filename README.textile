@@ -83,7 +83,7 @@ todo
 
 h2. Why use MPI? Why not Hadoop?
 
-If you can solve your problem with Hadoop, go for it.  If you are short on time, and MPI code exists that solves your problem, you might want to try Elasticwulf.  MPI has been around for a while and there are lots of existing libraries for a number of domains.  That said, debugging MPI jobs and dealing with node failure can be a hassle.  Reuse or reimplement, your choice.
+If you can solve your problem with Hadoop, go for it.  If you are short on time and MPI code exists that solves your problem, then you might want to try Elasticwulf.  MPI has been around for a while and there are lots of existing libraries for a number of domains.  That said, debugging MPI jobs and dealing with node failure can be a hassle.  Reuse or reimplement, your choice.
 
 h2. Dependencies
 

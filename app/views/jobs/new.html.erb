@@ -6,32 +6,32 @@
   <table border="0" width="100%" cellpadding="10">
   <tr>
 
-  <td width="40%" valign="top">
+  <td width="50%" valign="top">
   <p>
     <%= f.label :name %><br />
-    <%= f.text_field :name, :cols => 40, :value =>"Kmeans demo" %> 
+    <%= f.text_area :name, :cols => 40, :rows => 1,:value =>"Kmeans demo" %> 
   </p>
   <p>
     <%= f.label "Job Description"  %><br />
-    <%= f.text_field :description, :cols => 40, :rows => 1, :value => "Simple Kmeans C MPI example from http://www.ece.northwestern.edu/~wkliao/Kmeans/index.html" %>
+    <%= f.text_area :description, :cols => 60, :rows => 2, :value => "Simple Kmeans C MPI example from http://www.ece.northwestern.edu/~wkliao/Kmeans/index.html" %>
   </p>  
   <p>
     <%= f.label :input_files %> <i>(mybucket/folder/mpi.bin mybucket/folder/script.sh)</i><br />
-    <%= f.text_area :input_files, :cols => 40, :rows => 5, :value =>"elasticwulf/samples/kmeans/input/color100.txt elasticwulf/samples/kmeans/code/Simple_Kmeans.zip elasticwulf/samples/kmeans/code/run_kmeans.sh" %>
+    <%= f.text_area :input_files, :cols => 60, :rows => 2, :value =>"elasticwulf/samples/kmeans/input/color100.txt elasticwulf/samples/kmeans/code/Simple_Kmeans.zip elasticwulf/samples/kmeans/code/run_kmeans.sh" %>
   </p>  
   <p>
     <%= f.label :commands %> <i>(bash script.sh)</i><br />
-    <%= f.text_area :commands, :cols => 40, :rows => 2, :value =>"bash run_kmeans.sh" %>
-  </p>
-  </td>
-  <td width="30%" valign="top">
-  <p>
-    <%= f.label :output_path %> <i>(mybucket/outputfolder/) </i><br />
-    <%= f.text_field :output_path, :value => "[MYBUCKET]/output/#{Time.now.strftime('%m%d%y%H%M')}/" %>
+    <%= f.text_area :commands, :cols => 60, :rows => 2, :value =>"bash run_kmeans.sh" %>
   </p>
   <p>
     <%= f.label :output_files %> <i>(outputfile1.dat output2.txt)</i><br />
-    <%= f.text_area :output_files, :cols => 40, :rows => 2, :value =>"color100.txt.membership color100.txt.cluster_centres" %>
+    <%= f.text_area :output_files, :cols => 60, :rows => 2, :value =>"color100.txt.membership color100.txt.cluster_centres" %>
+  </p>   
+  </td>
+  <td width="25%" valign="top">
+  <p>
+    <%= f.label :output_path %> <i>(mybucket/outputfolder/) </i><br />
+    <%= f.text_field :output_path, :value => "[MYBUCKET]/output/#{Time.now.strftime('%m%d%y%H%M')}/" %>
   </p>  
   <p>
     <%= f.label :number_of_instances %> <i>(integer)</i><br />
@@ -45,18 +45,18 @@
     <%= f.label :worker_ami_id %><br />
     <%= f.text_field :worker_ami_id, :value => APP_CONFIG['default_worker_ami_id']  %>
   </p>  
-  </td>
-  <td width="30%" valign="top">
   <p>
     <%= f.label :instance_type %><br />
     <%= f.text_field :instance_type, :value => APP_CONFIG['default_instance_type'] %>
   </p>
+  </td>  
+  <td width="25%" valign="top">  
   <p>
     <%= f.label :availability_zone %><br />
     <%= f.text_field :availability_zone, :value => APP_CONFIG['default_availability_zone'] %>
   </p>
   <p>
-    <%= f.label :keypair %> (ensure you have created this keypair)<br />
+    <%= f.label :keypair %><br />
     <%= f.text_field :keypair, :value => APP_CONFIG['default_keypair'] %>
   </p>  
   <p>

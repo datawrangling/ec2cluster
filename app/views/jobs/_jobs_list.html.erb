@@ -24,15 +24,12 @@
       <td><%=h job.finished_at.strftime('%m/%d %I:%M%p') unless job.finished_at.nil? %></td>
       <td><%=h job.state.gsub("_", " ") %></td>
       <td><%=h job.progress %></td>
-      <td><img height="16" src="http://datawrangling.s3.amazonaws.com/loadinfo.net.gif" width="16" /></td> 
+      <td><%= image_tag(job.spinner_state) %></td>
       <td><%= link_to 'Show', job %></td>               
       <td><%= link_to 'Cancel', cancel_job_path(job), :method => :put if job.is_cancellable?  %></td>
     </tr>
   <% end %> 
 </table>
-
-
-#if state not in (failed, cancelled, complete) show spinner
 
 <% if @jobs.size.to_i > 0 %>
   <script type="text/javascript">

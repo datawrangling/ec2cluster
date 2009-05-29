@@ -161,6 +161,16 @@ class Job < ActiveRecord::Base
     self.set_rest_url
     self.set_security_groups
   end
+  
+  def spinner_state
+    if self.state.match('failed|cancelled|complete') 
+      return "white.gif"
+    else 
+      return "spinner.gif"
+    end    
+  end
+  
+  
 
   def is_cancellable?
     cancellable_states = [
