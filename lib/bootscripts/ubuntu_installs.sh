@@ -148,7 +148,6 @@ else
   done  
 fi
 
-
 ### Set up hosts file on each node. hostsfile will only be ready after all child nodes start booting.
 chmod go-w /mnt/elasticwulf
 curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/hosts >> /etc/hosts
@@ -174,10 +173,12 @@ then
   done  
   echo "All workers have mounted NFS home directory, cluster is ready for MPI jobs"
   
-  # get total number of cpus in cluster from REST action
+  # Quick test of local openmpi
+  su - elasticwulf -c "mpicc /home/elasticwulf/elasticwulf-service/lib/examples/hello.c -o /home/elasticwulf/hello" 
+  su - elasticwulf -c "mpirun -np 2 /home/elasticwulf/hello > local_mpi_smoketest.txt"  
+  # Get total number of cpus in cluster from REST action
   CPU_COUNT=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/cpucount`
-
-  # quick smoke test of multinode openmpi run, 
+  # Quick smoke test of multinode openmpi run, 
   su - elasticwulf -c "mpirun -np $CPU_COUNT --hostfile /home/elasticwulf/openmpi_hostfile /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
 
   # kick off ruby command_runner.rb script (only on master node)
@@ -190,43 +191,3 @@ else
   # Send REST PUT to node url, signaling that NFS is ready on node..
   curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}  
 fi
-
-
-
-
-
-# smoke test of local mpi installation
-cat <<EOF >> /home/elasticwulf/hello.c
-#include <stdio.h>
-#include <mpi.h>
-
-int main(int argc, char *argv[]) {
-  int numprocs, rank, namelen;
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-
-  MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Get_processor_name(processor_name, &namelen);
-
-  printf("Process %d on %s out of %d\n", rank, processor_name, numprocs);
-
-  MPI_Finalize(); 
-  }
-EOF
-
-chown elasticwulf:elasticwulf /home/elasticwulf/hello.c
-
-# Quick test of local openmpi
-su - elasticwulf -c "mpicc /home/elasticwulf/hello.c -o /home/elasticwulf/hello" 
-### check number of processors available
-# cat /proc/cpuinfo 
-su - elasticwulf -c "mpirun -np 2 /home/elasticwulf/hello > local_mpi_smoketest.txt"
-
-
-
-
-
-
-
-
