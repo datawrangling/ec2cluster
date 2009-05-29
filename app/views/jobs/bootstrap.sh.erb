@@ -13,8 +13,8 @@ aws_secret_access_key=<%= APP_CONFIG['aws_secret_access_key'] %>
 admin_user=<%= APP_CONFIG['admin_user'] %>
 admin_password=<%= APP_CONFIG['admin_password'] %>
 rest_url=<%= self.mpi_service_rest_url %>
-user_packages=<%= self.user_packages %>
 job_id=<%= self.id %>
+user_packages="<%= self.user_packages %>"
 cd /home/elasticwulf
 su - elasticwulf -c "git clone $repository"
-bash /home/elasticwulf/elasticwulf-service/lib/bootscripts/ubuntu_installs.sh $aws_access_key_id $aws_secret_access_key $admin_user $admin_password $rest_url $user_packages $job_id
+bash /home/elasticwulf/elasticwulf-service/lib/bootscripts/ubuntu_installs.sh $aws_access_key_id $aws_secret_access_key $admin_user $admin_password $rest_url $job_id "$user_packages" 
