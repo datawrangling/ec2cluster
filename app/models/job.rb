@@ -7,9 +7,7 @@ class Job < ActiveRecord::Base
   # see http://www.jroller.com/obie/entry/default_values_for_activerecord_attributes
   
   # The default setting is for the cluster to shut itself down when the job completes
-  def shutdown_after_complete
-    self[:shutdown_after_complete] or true
-  end
+  # but this is set in the database schema...
   
   # Use default base 32 bit Ubuntu amis
   # see http://alestic.com/ for details

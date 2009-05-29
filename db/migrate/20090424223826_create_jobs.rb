@@ -11,7 +11,7 @@ class CreateJobs < ActiveRecord::Migration
       t.text :commands
       t.string :output_path
       t.text :output_files
-      t.boolean :shutdown_after_complete
+      t.boolean :shutdown_after_complete,   :default => 1
       t.string :master_ami_id
       t.string :worker_ami_id
       t.string :log_path
