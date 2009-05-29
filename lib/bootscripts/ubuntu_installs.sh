@@ -99,6 +99,9 @@ NODE_ID=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/search
 # master security group has the format: 8-elasticwulf-master-052609-0823PM 
 SECURITY_GROUPS=`wget -q -O - http://169.254.169.254/latest/meta-data/security-groups`
 
+# Send REST PUT to node url, signaling that node is ready 
+curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"is_configured":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
+
 if [[ "$SECURITY_GROUPS" =~ "master" ]]
 then
   echo "Node is master, installing nfs server"
@@ -106,23 +109,93 @@ then
   echo '/mnt/elasticwulf *(rw,sync)' >> /etc/exports
   /etc/init.d/nfs-kernel-server restart
 
-
   ############ ON MASTER NODE AS ELASTICWULF USER ############
   #As the home directory of elasticwulf in all nodes is the same (/home/elasticwulf) ,
   #there is no need to run these commands on all nodes.
   #First we generate DSA key for elasticwulf (leaves passphrase empty):
   su - elasticwulf -c "ssh-keygen -b 1024 -N '' -f ~/.ssh/id_dsa -t dsa -q"
-
   #Next we add this key to authorized keys on master node:
   su - elasticwulf -c "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys"
   su - elasticwulf -c "chmod 700 ~/.ssh"
   su - elasticwulf -c "chmod 600 ~/.ssh/*"
+  
 else
   echo 'node is a worker, skipping NFS export step'
 fi
 
-# smoke test of local mpi
+# when nfs export is complete and state is "waiting_for_nodes"
+# while loop goes here, waiting for all nodes to be configured before starting the NFS mount...
 
+# have to wait in loop for all nodes to start
+while [[ "$JOB_STATE" =~ "waiting_for_nodes" ]]
+do
+  sleep 5
+  JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
+done  
+
+if [[ "$SECURITY_GROUPS" =~ "master" ]]
+then
+  echo "Master node NFS export complete"
+  # Send REST PUT to node url, signaling that NFS export is ready on MASTER node..
+  curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
+  # this needs to trigger a state transition, from exporting_master_nfs -> mounting_nfs
+else
+  echo 'node is a worker, waiting for master NFS export to complete'
+  while [[ "$JOB_STATE" =~ "exporting_master_nfs" ]]
+  do
+    sleep 5
+    JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
+  done  
+fi
+
+
+### Set up hosts file on each node. hostsfile will only be ready after all child nodes start booting.
+chmod go-w /mnt/elasticwulf
+curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/hosts >> /etc/hosts
+sed -i -e 's/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g' /etc/ssh/ssh_config
+/etc/init.d/ssh restart
+
+MASTER_HOSTNAME=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/masterhostname`
+
+# mount NFS home dir on worker nodes 
+if [[ "$SECURITY_GROUPS" =~ "master" ]]
+then  
+  echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
+  # fetch openmpi_hostfile from jobs url
+  su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
+
+  WORKER_NODES=`cat openmpi_hostfile | wc -l | cut --delimiter=' ' -f 1`
+  MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
+  while [ $MOUNTED_NODES -lt $WORKER_NODES ]
+  do
+    echo "Waiting for worker nfs mounts..."  
+    sleep 5
+    MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
+  done  
+  echo "All workers have mounted NFS home directory, cluster is ready for MPI jobs"
+  
+  # get total number of cpus in cluster from REST action
+  CPU_COUNT=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/cpucount`
+
+  # quick smoke test of multinode openmpi run, 
+  su - elasticwulf -c "mpirun -np $CPU_COUNT --hostfile /home/elasticwulf/openmpi_hostfile /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
+
+  # kick off ruby command_runner.rb script (only on master node)
+  su - elasticwulf -c "ruby /home/elasticwulf/elasticwulf-service/lib/command_runner.rb $CPU_COUNT"  
+  
+else  
+  echo "Node is worker, mounting master NFS"
+  apt-get -y install portmap nfs-common
+  mount ${MASTER_HOSTNAME}:/mnt/elasticwulf /mnt/elasticwulf
+  # Send REST PUT to node url, signaling that NFS is ready on node..
+  curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}  
+fi
+
+
+
+
+
+# smoke test of local mpi installation
 cat <<EOF >> /home/elasticwulf/hello.c
 #include <stdio.h>
 #include <mpi.h>
@@ -149,67 +222,6 @@ su - elasticwulf -c "mpicc /home/elasticwulf/hello.c -o /home/elasticwulf/hello"
 ### check number of processors available
 # cat /proc/cpuinfo 
 su - elasticwulf -c "mpirun -np 2 /home/elasticwulf/hello > local_mpi_smoketest.txt"
-
-# Send REST PUT to node url, signaling that node is ready 
-curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"is_configured":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
-
-# have to wait in loop for all nodes to start before
-# generating a hosts file 
-# wait for /jobs/1/state to report 'configuring_cluster'
-
-while [[ "$JOB_STATE" =~ "waiting_for_nodes" ]]
-do
-sleep 5
-JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
-done
-
-### Set up hosts file on each node. hostsfile will only be ready after all child nodes start booting.
-chmod go-w /mnt/elasticwulf
-curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/hosts >> /etc/hosts
-sed -i -e 's/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g' /etc/ssh/ssh_config
-/etc/init.d/ssh restart
-
-MASTER_HOSTNAME=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/masterhostname`
-
-# mount NFS home dir on worker nodes 
-if [[ "$SECURITY_GROUPS" =~ "master" ]]
-then  
-  echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
-  # fetch openmpi_hostfile from jobs url
-  su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
-  # Send REST PUT to node url, signaling that NFS is ready on master node..
-  curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
-  
-  WORKER_NODES=`cat openmpi_hostfile | wc -l | cut --delimiter=' ' -f 1`
-  MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
-  while [ $MOUNTED_NODES -lt $WORKER_NODES ]
-  do
-  echo "Waiting for worker nfs mounts..."  
-  sleep 5
-  MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
-  done  
-  echo "All workers have mounted NFS home directory, cluster is ready for MPI jobs"
-  
-  # get total number of cpus in cluster from REST action
-  CPU_COUNT=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/cpucount`
-
-  # quick smoke test of multinode openmpi run, 
-  su - elasticwulf -c "mpirun -np $CPU_COUNT --hostfile /home/elasticwulf/openmpi_hostfile /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
-
-  # kick off ruby command_runner.rb script (only on master node)
-  su - elasticwulf -c "ruby /home/elasticwulf/elasticwulf-service/lib/command_runner.rb $CPU_COUNT"  
-  
-  
-else
-  echo "Node is worker, mounting master NFS"
-  apt-get -y install portmap nfs-common
-  mount ${MASTER_HOSTNAME}:/mnt/elasticwulf /mnt/elasticwulf
-  # Send REST PUT to node url, signaling that NFS is ready on node..
-  curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}  
-fi
-
-
-
 
 
 

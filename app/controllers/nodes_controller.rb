@@ -70,26 +70,33 @@ class NodesController < ApplicationController
     respond_to do |format|
       # When all nodes report ready, a nextstep action is triggered on the job.
       if @node.update_attributes(params[:node])
+        
         if @job.state == "waiting_for_nodes"
-          
           # check if all nodes have finished installs/configuration
           @ready_nodes = @job.nodes.find(:all, :conditions => {:is_configured => true })
           if @ready_nodes.size == @job.number_of_instances
-            @job.nextstep!  # waiting_for_nodes - > mounting_nfs
-            puts "All nodes have reported ready, configuring cluster host file and starting NFS mounts"
-          end
-               
+            @job.nextstep!  # waiting_for_nodes - > exporting_master_nfs
+            puts "All nodes have reported ready, configuring cluster host file and starting NFS export"
+          end 
+        elsif @job.state == "exporting_master_nfs"
+          # trigger transition when nfs_mounted => true for master node...
+          # find master node by checking if instance_id = master_instance_id, 
+          master_instance_id = @job.master_instance_id
+          @master_node = @job.nodes.find(:one, :conditions => {:aws_instance_id => master_instance_id })
+          # check if nfs_mounted is true for master node, if so - transition.            
+          if @master_node.nfs_mounted
+            @job.nextstep!  # exporting_master_nfs -> mounting_nfs
+            puts "Master node has exported NFS home, ready for worker nodes to begin mounting volume"
+          end                  
         elsif @job.state == "mounting_nfs"  
           # check if all nodes have mounted NFS home directory
-          # TODO insert logic to flip nfs_mounted flag here 
           @mounted_nodes = @job.nodes.find(:all, :conditions => {:nfs_mounted => true })
           if @mounted_nodes.size == @job.number_of_instances
             @job.nextstep!  # mounting_nfs - > configuring_cluster
             puts "All nodes mounted NFS volumes, cluster ready for MPI jobs"
           end          
-          
-              
         end  
+        
         flash[:notice] = 'Node was successfully updated.'
         format.html { redirect_to job_url(@job) }
         format.xml  { head :ok }

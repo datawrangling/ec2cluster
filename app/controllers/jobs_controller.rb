@@ -140,8 +140,6 @@ class JobsController < ApplicationController
     end
   end  
   
-  
-  
   # PUT /jobs/1/nextstep
   def nextstep
     # called remotely by the running job cluster on EC2

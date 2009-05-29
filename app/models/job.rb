@@ -74,6 +74,7 @@ class Job < ActiveRecord::Base
   aasm_state :launch_pending     
   aasm_state :launching_instances
   aasm_state :waiting_for_nodes
+  aasm_state :exporting_master_nfs
   aasm_state :mounting_nfs
   aasm_state :configuring_cluster
   aasm_state :waiting_for_jobs
@@ -96,7 +97,8 @@ class Job < ActiveRecord::Base
     transitions :to => :launching_instances, :from => [:launch_pending] 
      
     transitions :to => :waiting_for_nodes, :from => [:launching_instances]
-    transitions :to => :mounting_nfs, :from => [:waiting_for_nodes]       
+    transitions :to => :exporting_master_nfs, :from => [:waiting_for_nodes]      
+    transitions :to => :mounting_nfs, :from => [:exporting_master_nfs]       
     transitions :to => :configuring_cluster, :from => [:mounting_nfs] 
     transitions :to => :running_job, :from => [:configuring_cluster]
     transitions :to => :running_job, :from => [:waiting_for_jobs]
@@ -121,6 +123,7 @@ class Job < ActiveRecord::Base
     transitions :to => :cancellation_requested, 
     :from => [
       :waiting_for_nodes,
+      :exporting_master_nfs,
       :mounting_nfs,
       :configuring_cluster, 
       :running_job, 
@@ -135,6 +138,7 @@ class Job < ActiveRecord::Base
       :launch_pending, 
       :launching_instances,
       :waiting_for_nodes,
+      :exporting_master_nfs,
       :mounting_nfs,
       :configuring_cluster, 
       :running_job,
