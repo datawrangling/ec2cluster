@@ -1,7 +1,7 @@
 ActionController::Routing::Routes.draw do |map|
 
   map.root :controller => "jobs" 
-  map.resources :jobs, :member => { :cancel => :put , :nextstep => :put, :updateprogress => :put, :error => :put, :hosts => :get, :openmpi_hostfile => :get, :mpich2_machinefile => :get, :search => :get, :state => :get, :cpucount => :get, :masterhostname => :get} , :collection => { :refresh => :get }, :has_many => :nodes
+  map.resources :jobs, :member => { :cancel => :put , :nextstep => :put, :wait => :put, :updateprogress => :put, :error => :put, :hosts => :get, :openmpi_hostfile => :get, :mpich2_machinefile => :get, :search => :get, :state => :get, :cpucount => :get, :masterhostname => :get} , :collection => { :refresh => :get }, :has_many => :nodes
 
   
 
