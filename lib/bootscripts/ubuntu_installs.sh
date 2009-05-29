@@ -116,31 +116,27 @@ then
   #Next we add this key to authorized keys on master node:
   su - elasticwulf -c "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys"
   su - elasticwulf -c "chmod 700 ~/.ssh"
-  su - elasticwulf -c "chmod 600 ~/.ssh/*"
-  
+  su - elasticwulf -c "chmod 600 ~/.ssh/*"  
 else
   echo 'node is a worker, skipping NFS export step'
 fi
 
-# when nfs export is complete and state is "waiting_for_nodes"
-# while loop goes here, waiting for all nodes to be configured before starting the NFS mount...
-
-# have to wait in loop for all nodes to start
-while [[ "$JOB_STATE" != "exporting_master_nfs"  ]]
-do
-  sleep 5
-  JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
-done  
 
 if [[ "$SECURITY_GROUPS" =~ "master" ]]
 then
+  # have to wait in loop for all nodes to start
+  while [[ "$JOB_STATE" != "exporting_master_nfs"  ]]
+  do
+    sleep 5
+    JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
+  done
   echo "Master node NFS export complete"
   # Send REST PUT to node url, signaling that NFS export is ready on MASTER node..
   curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}
   # this needs to trigger a state transition, from exporting_master_nfs -> mounting_nfs
 else
   echo 'node is a worker, waiting for master NFS export to complete'
-  while [[ "$JOB_STATE" =~ "exporting_master_nfs" ]]
+  while [[ "$JOB_STATE" != "mounting_nfs" ]]
   do
     sleep 5
     JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`
