@@ -122,6 +122,26 @@ class JobsController < ApplicationController
   end
   
   
+  # PUT /jobs/1/wait
+  def wait
+    # called remotely by the running job cluster on EC2
+    # Transistions job to "waiting_for_jobs",
+    # i.e. "configuring_cluster" -> "running_job"
+    @job = Job.find(params[:id])
+    logger.debug( 'triggering job state, running -> waiting' )    
+    @job.wait!
+    flash[:notice] = 'triggering next job step..'
+    logger.debug( 'waiting_for_jobs job step transition triggered' ) 
+
+    respond_to do |format|
+      format.html { redirect_to(jobs_url) }
+      format.xml  { render :xml => @job }
+      format.json  { render :json => @job }
+    end
+  end  
+  
+  
+  
   # PUT /jobs/1/nextstep
   def nextstep
     # called remotely by the running job cluster on EC2

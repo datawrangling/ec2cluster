@@ -111,13 +111,10 @@ class Job < ActiveRecord::Base
     transitions :to => :cancelled, :from => [:cancelling_job]    
     
     transitions :to => :terminating_job, :from => [:termination_requested] 
-    transitions :to => :failed, :from => [:terminating_job]       
-          
+    transitions :to => :failed, :from => [:terminating_job] 
   end  
   
-  # TODO: if shutdown_after_complete is false, The master node service will
-  # call this action instead of nextstep... not implemented yet so cluster always
-  # shuts down after job completes.
+  # TODO: provide a way to submit additional jobs/commands to a waiting cluster... 
   aasm_event :wait do
     transitions :to => :waiting_for_jobs, :from => [:running_job]
   end  

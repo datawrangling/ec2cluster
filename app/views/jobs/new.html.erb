@@ -49,6 +49,10 @@
     <%= f.label :instance_type %><br />
     <%= f.text_field :instance_type, :value => APP_CONFIG['default_instance_type'] %>
   </p>
+  <p>
+    <%= f.label :user_packages %> <i>(extra apt-get installs)</i><br />
+    <%= f.text_field :user_packages, :value => "python-biopython python-simplejson" %>
+  </p>  
   </td>  
   <td width="25%" valign="top">  
   <p>

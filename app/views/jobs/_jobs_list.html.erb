@@ -30,6 +30,10 @@
     </tr>
   <% end %> 
 </table>
+<br >
+<%= will_paginate @jobs, :id => 'wpjobs' %>
+<br />
+
 
 <% if @jobs.size.to_i > 0 %>
   <script type="text/javascript">

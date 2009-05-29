@@ -1,13 +1,9 @@
 <h1>Elasticwulf Jobs</h1>
 Submit a <%= link_to 'New job', new_job_path %><BR>
->> <blink>_</blink>
 <BR><BR>
 <div id="jobs_div">
 <%= render :partial => "jobs_list", :locals => { :jobs => @jobs } %>
 </div>
-<br >
-<%= will_paginate @jobs, :id => 'wpjobs' %>
-<br />
 <%= periodically_call_remote(:url => {:action => :refresh, :page=> params[:page] }, :frequency => '5', :condition => "start_polling == true",
  :update => 'jobs_div', :method => :get) %>
 

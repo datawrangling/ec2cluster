@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090527214156) do
+ActiveRecord::Schema.define(:version => 20090529163906) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -57,6 +57,7 @@ ActiveRecord::Schema.define(:version => 20090527214156) do
     t.string   "master_public_hostname"
     t.datetime "cancelled_at"
     t.datetime "failed_at"
+    t.text     "user_packages"
   end
 
   create_table "nodes", :force => true do |t|

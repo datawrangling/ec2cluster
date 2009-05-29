@@ -12,7 +12,8 @@ aws_secret_access_key=$2
 admin_user=$3
 admin_password=$4
 rest_url=$5
-job_id=$6
+user_packages=$6
+job_id=$7
 
 cat <<EOF >> /home/elasticwulf/cluster_config.yml
 aws_access_key_id: $aws_access_key_id
@@ -21,6 +22,7 @@ admin_user: $admin_user
 admin_password: $admin_password
 rest_url: $rest_url
 job_id: $job_id
+user_packages: $user_packages
 EOF
 
 chown elasticwulf:elasticwulf /home/elasticwulf/cluster_config.yml
@@ -45,8 +47,7 @@ apt-get -y install s3cmd ec2-ami-tools
 apt-get -y install build-essential
 apt-get -y install libboost-serialization-dev
 apt-get -y install libexpat1-dev
-apt-get -y install libopenmpi1 openmpi-bin openmpi-common
-apt-get -y install libopenmpi-dev
+apt-get -y install libopenmpi1 openmpi-bin openmpi-common libopenmpi-dev
 
 # ruby and ruby gems...
 apt-get -y install ruby-full build-essential
@@ -75,14 +76,20 @@ apt-get -y install r-base-dev r-base-html r-base-latex r-cran-date octave3.0
 # http://cran.r-project.org/web/packages/snow/index.html
 apt-get -y install r-cran-rmpi r-cran-snow
 
-# TODO install user packages, get them from a custom action url for the job
-# USER_PACKAGES=''
-# 
-# if [ "$USER_PACKAGES" != "" ]; then
-#   apt-get update
-#   apt-get -y install $USER_PACKAGES
-# fi
+# python installs
+apt-get -y install python-boto python-imaging python-dateutil 
+# python numerical computing:
+apt-get -y install python-setuptools python-docutils 
+apt-get -y install python-support python-distutils-extra 
+apt-get -y install python-dev python-numpy python-numpy-ext python-scipy cython 
+# easy_install mpi4py #long install time, might want to comment out until prebuilt AMI is ready
+# # see http://ipython.scipy.org/doc/rel-0.9.1/html/parallel/index.html
+# apt-get -y install ipython
 
+# install any user defined packages
+if [ "$user_packages" != "" ]; then
+  apt-get -y install $user_packages
+fi
 
 INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`
 # Get node id for instance
@@ -150,7 +157,7 @@ curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d
 # generating a hosts file 
 # wait for /jobs/1/state to report 'configuring_cluster'
 
-while [[ "$JOB_STATE" =~ "waiting" ]]
+while [[ "$JOB_STATE" =~ "waiting_for_nodes" ]]
 do
 sleep 5
 JOB_STATE=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/state`

@@ -165,33 +165,18 @@
   <b>Master public hostname:</b>
   <%=h @job.master_public_hostname %>
 </p>
+
+<p>
+  <b>User Packages:</b>
+  <%=h @job.user_packages %>
+</p>
+
 </td>
 
 </tr>
 </table>
 
-<h2>Cluster Nodes:</h2>
-<table>
-<tr>
-  <th>instance</th>
-  <th>state</th>
-  <th>Dns name</th>
-  <th>Private dns name</th>
-  <th>launch time</th>
-  <th>Is configured</th>
-  <th>NFS mounted</th>    
-</tr>
+<div id="nodes_div">
+<%= render :partial => "nodes_list", :locals => { :job => @job } %>
+</div>
 
-<% @job.nodes.each do |n| %>  
-  <tr>
-    <td><%=h n.aws_instance_id %></td>
-    <td><%=h n.aws_state %></td>
-    <td><%=h n.dns_name %></td>
-    <td><%=h n.private_dns_name %></td>
-    <td><%=h n.aws_launch_time %></td>
-    <td><%=h n.is_configured.to_s %></td>
-    <td><%=h n.nfs_mounted.to_s %></td>    
-  </tr>
-<% end %> 
-
-</table>
