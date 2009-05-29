@@ -130,7 +130,7 @@ class JobsController < ApplicationController
     @job = Job.find(params[:id])
     logger.debug( 'triggering job state, running -> waiting' )    
     @job.wait!
-    flash[:notice] = 'triggering next job step..'
+    flash[:notice] = 'run complete, switching to wait mode'
     logger.debug( 'waiting_for_jobs job step transition triggered' ) 
 
     respond_to do |format|

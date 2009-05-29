@@ -111,10 +111,13 @@ end
 # TODO: save logs to s3 before shutting down cluster
 puts "job.shutdown_after_complete"
 puts job.shutdown_after_complete
-if job.shutdown_after_complete == "true"
+if job.shutdown_after_complete
   job.put(:nextstep)  # Signal REST service, job state will transition from running_job -> shutdown_requested
 else
-
+  # job should transition to waiting state...
+  job.put(:wait)   
+end
+puts "Command run complete, files uploaded.  Job state is: " + job.state
 
 
 
