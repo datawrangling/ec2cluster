@@ -36,6 +36,8 @@ h4. Sample Ruby REST API client example
 
 todo repeat kmeans example
 
+
+Connect to Elasticwulf REST API
 <pre><code>
 puts "Running Job command..."
 # Use ActiveResource to communicate with the Elasticwulf REST API
@@ -45,7 +47,11 @@ class Job < ActiveResource::Base
   self.password = CONFIG['admin_password']
   self.timeout = 5
 end
+</code></pre>
 
+Submit a new job request:
+
+<pre><code>
 # Submit a job request to the API using just the required parameters
 job = Job.new(:name => "Kmeans demo API test 2", 
   :description => "Simple Kmeans C MPI example, run by pete using Ruby client", 
@@ -55,11 +61,12 @@ job = Job.new(:name => "Kmeans demo API test 2",
   :output_path => CONFIG["outputbucket"] + "/" + out_path, 
   :number_of_instances => "3", 
   :instance_type => "m1.small")
-
-puts job.to_s
 job.save # Saving submits the job description to the REST service  
-job_id = job.id
+job_id = job.id # save this for later...
+</code></pre>
 
+Ping server for status periodically until Job is complete, then fetch output files from S3
+<pre><code>
 puts "Job ID: " + job.id.to_s # returns the job ID
 puts "State: " + job.state # current state of the job
 puts "Progress: " + job.progress unless job.progress.nil? # more granular description
