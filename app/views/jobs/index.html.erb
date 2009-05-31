@@ -1,11 +1,9 @@
 <h1>Elasticwulf Jobs</h1>
-Submit a <%= link_to 'New job', new_job_path %><BR>
-<BR><BR>
-
+<%= link_to "New Job", new_job_path %><BR><BR>
 <div id="jobs_div">
 <%= render :partial => "jobs_list", :locals => { :jobs => @jobs } %>
 </div>
-Click on a row above to see node details
+Click on a row above to see a cluster summary
 <BR>
 <div id = "nodes_list">
  <%= render :partial => "nodes_list", :job_id => params[:job_id] unless @job.nil?  %>
