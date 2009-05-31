@@ -189,7 +189,9 @@ class Job < ActiveRecord::Base
   end
 
 
+
   def launch_cluster
+    #TODO: add a check before each step to see if job has been cancelled, if so abort...
     puts 'background cluster launch initiated...' 
     begin      
       self.nextstep! # launch_pending -> launching_instances   
@@ -262,6 +264,9 @@ class Job < ActiveRecord::Base
  
   
   def terminate_cluster    
+    #TODO: add a check to see if delayed_job launch has been initiated
+    # if it hasn't we need to delete the delayed job, for now we just block cancellation until nodes
+    # have launched
     puts 'background cluster shutdown initiated...'  
     begin 
       self.nextstep! # cancellation_requested -> cancelling_job

@@ -189,6 +189,7 @@ class JobsController < ApplicationController
       
   
   # Custom actions for MPI cluster config files, convenience methods that return plain text 
+
   
   # GET /jobs/1/hosts
   def hosts
@@ -268,6 +269,12 @@ class JobsController < ApplicationController
   # GET /jobs/refresh
   def refresh
     @jobs = Job.paginate :page => params[:page], :order => 'created_at DESC', :per_page =>10
+  end  
+  
+  # Custom action for AJAX node detail pane
+  def nodes_list
+    @job = Job.find(params[:job_id])
+    render :partial => "nodes_list", :locals => { :job => @job }
   end  
   
 end

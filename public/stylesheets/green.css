@@ -11,6 +11,7 @@ body {
 table {
 	font: 11px/24px Verdana, Arial, Helvetica, sans-serif;
 	border-collapse: collapse;
+	border: 1px #6699CC solid;
 	}
 
 th {
@@ -27,7 +28,21 @@ tr.yellow td {
 td {
 	border-bottom: 1px solid #CCC;
 	padding: 0 0.5em;
+	border-top: 0px;
+  border-left: 1px solid #9CF;
+  border-right: 0px;
 	}
+
+th.helpHed
+  { border-bottom: 2px solid #6699CC;
+  border-left: 1px solid #6699CC;
+  background-color: #BEC8D1;
+  text-align: left;
+  text-indent: 5px;
+  font-family: Verdana;
+  font-weight: bold;
+  font-size: 11px;
+  color: #404040; }
 
 
 td.adjacent {

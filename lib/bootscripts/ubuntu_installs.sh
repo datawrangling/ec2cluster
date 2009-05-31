@@ -38,10 +38,11 @@ apt-get -y install gawk curl
 apt-get -y install zip unzip rsync bzip2
 
 # version control
-apt-get -y install subversion mercurial git-core cvs
+apt-get -y install git-core
+apt-get -y install subversion mercurial cvs
 
 # Amazon related tools
-apt-get -y install s3cmd ec2-ami-tools
+apt-get -y install s3cmd ec2-ami-tools 
 
 # MPI related
 apt-get -y install build-essential

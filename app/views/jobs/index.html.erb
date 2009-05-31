@@ -1,10 +1,17 @@
 <h1>Elasticwulf Jobs</h1>
 Submit a <%= link_to 'New job', new_job_path %><BR>
 <BR><BR>
+
 <div id="jobs_div">
 <%= render :partial => "jobs_list", :locals => { :jobs => @jobs } %>
 </div>
-<%= periodically_call_remote(:url => {:action => :refresh, :page=> params[:page] }, :frequency => '5', :condition => "start_polling == true",
+Click on a row above to see node details
+<BR>
+<div id = "nodes_list">
+ <%= render :partial => "nodes_list", :job_id => params[:job_id] unless @job.nil?  %>
+</div>
+
+<%= periodically_call_remote(:url => {:action => :refresh, :page => params[:page], :job_id =>params[:job_id] }, :frequency => '5', :condition => "start_polling == true",
  :update => 'jobs_div', :method => :get) %>
 
 
