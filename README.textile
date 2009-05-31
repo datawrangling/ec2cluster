@@ -34,13 +34,27 @@ TODO: API docs and instructions go here
 
 h4. Sample Ruby REST API client example
 
-todo repeat kmeans example
+TODO: flesh this out more...
+ 
+The full code is at "http://github.com/datawrangling/elasticwulf-client-demos":http://github.com/datawrangling/elasticwulf-client-demos/tree/master
 
+Fill in your AWS info and server details in config.yml:
 
-Connect to Elasticwulf REST API
 <pre><code>
-puts "Running Job command..."
-# Use ActiveResource to communicate with the Elasticwulf REST API
+aws_access_key_id: AAAAA8BHBBBBBBBBBMM9 
+aws_secret_access_key: ABCiDu/BIBSCubisbdiBISBDUSBDUSBFSUIbubbu
+rest_url: https://ec2-XXX-XXX-XX-XXX.compute-1.amazonaws.com/
+admin_user: REPLACE_ME
+admin_password: REPLACE_ME
+inputbucket: REPLACE-WITH-YOUR-INBUCKET
+outputbucket: REPLACE-WITH-YOUR-OUTBUCKET
+keypair: your-keypair
+</code></pre>		
+	
+
+Use ActiveResource to communicate with the Elasticwulf REST API with Ruby
+
+<pre><code>
 class Job < ActiveResource::Base
   self.site = CONFIG['rest_url']  
   self.user = CONFIG['admin_user']
@@ -49,10 +63,9 @@ class Job < ActiveResource::Base
 end
 </code></pre>
 
-Submit a new job request:
+Submit a new job request to the API using just the required parameters:
 
 <pre><code>
-# Submit a job request to the API using just the required parameters
 job = Job.new(:name => "Kmeans demo API test 2", 
   :description => "Simple Kmeans C MPI example, run by pete using Ruby client", 
   :input_files => s3infiles.join(" "), 
@@ -61,18 +74,12 @@ job = Job.new(:name => "Kmeans demo API test 2",
   :output_path => CONFIG["outputbucket"] + "/" + out_path, 
   :number_of_instances => "3", 
   :instance_type => "m1.small")
-job.save # Saving submits the job description to the REST service  
-job_id = job.id # save this for later...
+job.save
+job_id = job.id 
 </code></pre>
 
-Ping server for status periodically until Job is complete, then fetch output files from S3
+Periodically ping server for job status until Job is complete, then fetch output files from S3
 <pre><code>
-puts "Job ID: " + job.id.to_s # returns the job ID
-puts "State: " + job.state # current state of the job
-puts "Progress: " + job.progress unless job.progress.nil? # more granular description
-
-# Loop, waiting for the job to complete.  
-puts "Waiting for job to complete..."
 until job.state == 'complete' do
   begin   
     job = Job.find(job_id)
