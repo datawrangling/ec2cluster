@@ -16,7 +16,13 @@ h3. Using the Web dashboard
 
 instructions go here for kmeans example
 
-h4. standard C fractal generation example
+!http://datawrangling.s3.amazonaws.com/dashboard.png!
+
+!http://datawrangling.s3.amazonaws.com/newjob.png!
+
+!http://datawrangling.s3.amazonaws.com/details.png!
+
+h4. standard C kmeans clustering example
 
 todo
 
@@ -24,11 +30,64 @@ h3. Using the REST API
 
 h4. API methods
 
-API docs and instructions go here
+TODO: API docs and instructions go here
 
-h4. Sample Ruby client example
+h4. Sample Ruby REST API client example
 
 todo repeat kmeans example
+
+<pre><code>
+puts "Running Job command..."
+# Use ActiveResource to communicate with the Elasticwulf REST API
+class Job < ActiveResource::Base
+  self.site = CONFIG['rest_url']  
+  self.user = CONFIG['admin_user']
+  self.password = CONFIG['admin_password']
+  self.timeout = 5
+end
+
+# Submit a job request to the API using just the required parameters
+job = Job.new(:name => "Kmeans demo API test 2", 
+  :description => "Simple Kmeans C MPI example, run by pete using Ruby client", 
+  :input_files => s3infiles.join(" "), 
+  :commands => "bash run_kmeans.sh", 
+  :output_files => expected_outputs.join(" "), 
+  :output_path => CONFIG["outputbucket"] + "/" + out_path, 
+  :number_of_instances => "3", 
+  :instance_type => "m1.small")
+
+puts job.to_s
+job.save # Saving submits the job description to the REST service  
+job_id = job.id
+
+puts "Job ID: " + job.id.to_s # returns the job ID
+puts "State: " + job.state # current state of the job
+puts "Progress: " + job.progress unless job.progress.nil? # more granular description
+
+# Loop, waiting for the job to complete.  
+puts "Waiting for job to complete..."
+until job.state == 'complete' do
+  begin   
+    job = Job.find(job_id)
+    puts "[State]: " + job.state + " [Progress]: " + job.progress unless job.progress.nil?
+  rescue ActiveResource::TimeoutError  
+    puts "TimeoutError calling REST server..."  
+  end
+  sleep 5  
+end
+</code></pre>
+	
+Some examples of other optional parameters for Job.new()
+
+<pre><code>
+	master_ami => "ami-bf5eb9d6"
+	worker_ami => "ami-bf5eb9d6"
+	user_packages => "python-setuptools python-docutils"
+	availability_zone => "us-east-1a"
+	keypair => CONFIG["keypair"]
+	mpi_version => "openmpi"
+	shutdown_after_complete => false	
+</code></pre>
 
 h4. Curl examples
 
