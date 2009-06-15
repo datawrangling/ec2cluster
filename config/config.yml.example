@@ -1,6 +1,6 @@
 development:
   rails_application_port: 3000
-  repository: "git://github.com/datawrangling/elasticwulf-service.git"
+  repository: "git://github.com/datawrangling/ec2cluster.git"
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
   web_security_group: 'default'
@@ -17,7 +17,7 @@ development:
 
 test:
   rails_application_port: 3000
-  repository: "git://github.com/datawrangling/elasticwulf-service.git"
+  repository: "git://github.com/datawrangling/ec2cluster.git"
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD  
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
   web_security_group: 'default'
@@ -34,7 +34,7 @@ test:
 
 production:
   rails_application_port: 3000
-  repository: "git://github.com/datawrangling/elasticwulf-service.git"
+  repository: "git://github.com/datawrangling/ec2cluster.git"
   aws_access_key_id: 1233KNMKNDSVNDKNVDVD
   aws_secret_access_key: DJNVio/vvJDNNCDMVMLlmLMLMLMLMVDlcmldcmdl
   web_security_group: 'default'

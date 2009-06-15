@@ -1,13 +1,13 @@
-h1. ElasticWulf-Service 
+h1. ec2cluster 
 
-Elasticwulf-Service is a Rails web console, including a REST API, that launches temporary Beowulf clusters on Amazon EC2 for parallel processing.  You upload input data and code to Amazon S3, then submit a job request including how many nodes you want in your cluster.  Elasticwulf will spin up & configure a private beowulf cluster, process the data in parallel across the nodes, upload the output results to an Amazon S3 bucket, and terminate the cluster when the job completes (termination is optional).  ElasticWulf-Service is like Amazon Elastic MapReduce, except it is uses MPI and REST instead of Hadoop and SOAP.  The source code is also free for use in both personal and commercial projects, released under the BSD license.
+ec2cluster is a Rails web console, including a REST API, that launches temporary Beowulf clusters on Amazon EC2 for parallel processing.  You upload input data and code to Amazon S3, then submit a job request including how many nodes you want in your cluster.  ec2cluster will spin up & configure a private beowulf cluster, process the data in parallel across the nodes, upload the output results to an Amazon S3 bucket, and terminate the cluster when the job completes (termination is optional).  ec2cluster is like Amazon Elastic MapReduce, except it is uses MPI and REST instead of Hadoop and SOAP.  The source code is also free for use in both personal and commercial projects, released under the BSD license.
 
 h3. Features
 
 * feature 1
 * feature 2
 
-h2. Running MPI jobs on EC2 with Elasticwulf
+h2. Running MPI jobs on EC2 with ec2cluster
 
 overview goes here, workflow, s3 inputs, commands.
 
@@ -36,7 +36,7 @@ h4. Sample Ruby REST API client example
 
 TODO: flesh this out more...
  
-The full code is at "http://github.com/datawrangling/elasticwulf-client-demos":http://github.com/datawrangling/elasticwulf-client-demos/tree/master
+The full code is at "http://github.com/datawrangling/ec2cluster-client-demos":http://github.com/datawrangling/ec2cluster-client-demos/tree/master
 
 Fill in your AWS info and server details in config.yml:
 
@@ -52,7 +52,7 @@ keypair: your-keypair
 </code></pre>		
 	
 
-Use ActiveResource to communicate with the Elasticwulf REST API with Ruby
+Use ActiveResource to communicate with the ec2cluster REST API with Ruby
 
 <pre><code>
 class Job < ActiveResource::Base
@@ -156,7 +156,7 @@ todo
 
 h2. Why use MPI? Why not Hadoop?
 
-If you can solve your problem with Hadoop, go for it.  If you are short on time and MPI code exists that solves your problem, then you might want to try Elasticwulf.  MPI has been around for a while and there are lots of existing libraries for a number of domains.  That said, debugging MPI jobs and dealing with node failure can be a hassle.  Reuse or reimplement, your choice.
+If you can solve your problem with Hadoop, go for it.  If you are short on time and MPI code exists that solves your problem, then you might want to try ec2cluster.  MPI has been around for a while and there are lots of existing libraries for a number of domains.  That said, debugging MPI jobs and dealing with node failure can be a hassle.  Reuse or reimplement, your choice.
 
 h2. Dependencies
 
@@ -179,7 +179,7 @@ Launch an instance of the latest ec2onrails ami and note the returned instance a
 	$ ec2-run-instances ami-5394733a -k gsg-keypair
 	$ ec2-describe-instances
 </pre>
-Create the needed configuration files from the provided examples and edit them, filling in your instance address information, keypairs, and other configuration information as indicated in the comments of each file. See the ec2onrails documentation or source code for more details on each setting.  If you want to make changes to the elasticwulf code, be sure to replace the base github repository in deploy.rb and config.yml with your own github location.
+Create the needed configuration files from the provided examples and edit them, filling in your instance address information, keypairs, and other configuration information as indicated in the comments of each file. See the ec2onrails documentation or source code for more details on each setting.  If you want to make changes to the ec2cluster code, be sure to replace the base github repository in deploy.rb and config.yml with your own github location.
 <pre>
 	$ cp config/deploy.rb.example config/deploy.rb
 	$ cp config/s3.yml.example config/s3.yml
@@ -205,7 +205,7 @@ Deploy the app to your launched EC2 instance with Capistrano (this wil take seve
 </pre>
 Use the admin login information you set in config.yml to access the dashboard from a web browser or as web service at the url of the instance you provided in deploy.rb: https://ec2-12-xx-xx-xx.z-1.compute-1.amazonaws.com . You can also ssh into your running EC2 instance as usual with your keypairs to debug any issues.  See the ec2onrails forums for more help debugging deployment issues.
 
-To redeploy the app after making changes to the base elasticwulf code (this will also restart the delayed_job services which launch and terminate EC2 clusters):
+To redeploy the app after making changes to the base ec2cluster code (this will also restart the delayed_job services which launch and terminate EC2 clusters):
 <pre>
     $ cap deploy
 </pre>
@@ -251,7 +251,7 @@ Launch the rails app itself
 Launch a background delayed_job worker in a separate terminal window
 <pre>
 	$ rake jobs:work
-	(in /Users/pskomoroch/rails_projects/elasticwulf-service)
+	(in /Users/pskomoroch/rails_projects/ec2cluster)
 	*** Starting job worker host:72-63-103-214.pools.spcsdns.net pid:12221
 	background cluster launch initiated...
 	1 jobs processed at 0.0498 j/s, 0 failed ...

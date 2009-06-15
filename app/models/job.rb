@@ -199,7 +199,7 @@ class Job < ActiveRecord::Base
                                   APP_CONFIG['aws_secret_access_key'])
  
       puts "Creating master security group"
-      @ec2.create_security_group(self.master_security_group,'Elasticwulf-Master-Node')
+      @ec2.create_security_group(self.master_security_group,'ec2cluster-Master-Node')
     
       self.set_progress_message("launching master node")     
       template = "/../views/jobs/bootstrap.sh.erb"
@@ -212,7 +212,7 @@ class Job < ActiveRecord::Base
       if self.number_of_instances > 1
         puts "Launching worker nodes"   
         self.set_progress_message("launching worker nodes")
-        @ec2.create_security_group(self.worker_security_group,'Elasticwulf-Worker-Node')    
+        @ec2.create_security_group(self.worker_security_group,'ec2cluster-Worker-Node')    
         @workernodes = boot_nodes(self.number_of_instances, self.worker_ami_id,
          self.worker_security_group, bootscript)              
       end
@@ -368,8 +368,8 @@ protected
   
   def set_security_groups  
     timeval = Time.now.strftime('%m%d%y-%I%M%p')
-    update_attribute(:master_security_group, "#{id}-elasticwulf-master-"+timeval)
-    update_attribute(:worker_security_group, "#{id}-elasticwulf-worker-"+timeval)
+    update_attribute(:master_security_group, "#{id}-ec2cluster-master-"+timeval)
+    update_attribute(:worker_security_group, "#{id}-ec2cluster-worker-"+timeval)
     self.save    
   end  
 

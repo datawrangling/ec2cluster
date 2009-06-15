@@ -2,11 +2,11 @@
 apt-get -y update
 apt-get -y upgrade
 apt-get -y install git-core
-groupadd elasticwulf
-useradd -d /mnt/elasticwulf -m -g elasticwulf elasticwulf
-ln -s /mnt/elasticwulf /home/elasticwulf
-chmod 775 -R /home/elasticwulf/ 
-chown -R elasticwulf:elasticwulf /home/elasticwulf
+groupadd ec2cluster
+useradd -d /mnt/ec2cluster -m -g ec2cluster ec2cluster
+ln -s /mnt/ec2cluster /home/ec2cluster
+chmod 775 -R /home/ec2cluster/ 
+chown -R ec2cluster:ec2cluster /home/ec2cluster
 repository=<%= APP_CONFIG['repository'] %>
 aws_access_key_id=<%= APP_CONFIG['aws_access_key_id'] %>
 aws_secret_access_key=<%= APP_CONFIG['aws_secret_access_key'] %>
@@ -15,6 +15,6 @@ admin_password=<%= APP_CONFIG['admin_password'] %>
 rest_url=<%= self.mpi_service_rest_url %>
 job_id=<%= self.id %>
 user_packages="<%= self.user_packages %>"
-cd /home/elasticwulf
-su - elasticwulf -c "git clone $repository"
-bash /home/elasticwulf/elasticwulf-service/lib/bootscripts/ubuntu_installs.sh $aws_access_key_id $aws_secret_access_key $admin_user $admin_password $rest_url $job_id "$user_packages" 
+cd /home/ec2cluster
+su - ec2cluster -c "git clone $repository"
+bash /home/ec2cluster/ec2cluster/lib/bootscripts/ubuntu_installs.sh $aws_access_key_id $aws_secret_access_key $admin_user $admin_password $rest_url $job_id "$user_packages" 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ubuntu MPI cluster installs
-# this script is kicked off as root within /home/elasticwulf on all nodes 
+# this script is kicked off as root within /home/ec2cluster on all nodes 
 
 # TODO: check if any installs need to be modified for 64 bit vs. 32 bit amis
 # information can be obtained by curl of instance metadata.
@@ -15,7 +15,7 @@ rest_url=$5
 job_id=$6
 user_packages="$7"
 
-cat <<EOF >> /home/elasticwulf/cluster_config.yml
+cat <<EOF >> /home/ec2cluster/cluster_config.yml
 aws_access_key_id: $aws_access_key_id
 aws_secret_access_key: $aws_secret_access_key
 admin_user: $admin_user
@@ -25,10 +25,10 @@ job_id: $job_id
 user_packages: $user_packages
 EOF
 
-chown elasticwulf:elasticwulf /home/elasticwulf/cluster_config.yml
+chown ec2cluster:ec2cluster /home/ec2cluster/cluster_config.yml
 
 addgroup admin
-adduser elasticwulf admin
+adduser ec2cluster admin
 echo '' >> /etc/sudoers
 echo '# Members of the admin group may gain root ' >> /etc/sudoers
 echo '%admin ALL=NOPASSWD:ALL' >> /etc/sudoers
@@ -95,7 +95,7 @@ INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`
 NODE_ID=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/search?query=${INSTANCE_ID}`
 
 # configure NFS on master node and set up keys
-# master security group has the format: 8-elasticwulf-master-052609-0823PM 
+# master security group has the format: 8-ec2cluster-master-052609-0823PM 
 SECURITY_GROUPS=`wget -q -O - http://169.254.169.254/latest/meta-data/security-groups`
 
 # Job state is "waiting_for_nodes"
@@ -106,18 +106,18 @@ if [[ "$SECURITY_GROUPS" =~ "master" ]]
 then
   echo "Node is master, installing nfs server"
   sudo apt-get -y install nfs-kernel-server
-  echo '/mnt/elasticwulf *(rw,sync)' >> /etc/exports
+  echo '/mnt/ec2cluster *(rw,sync)' >> /etc/exports
   /etc/init.d/nfs-kernel-server restart
 
-  ############ ON MASTER NODE AS ELASTICWULF USER ############
-  #As the home directory of elasticwulf in all nodes is the same (/home/elasticwulf) ,
+  ############ ON MASTER NODE AS ec2cluster USER ############
+  #As the home directory of ec2cluster in all nodes is the same (/home/ec2cluster) ,
   #there is no need to run these commands on all nodes.
-  #First we generate DSA key for elasticwulf (leaves passphrase empty):
-  su - elasticwulf -c "ssh-keygen -b 1024 -N '' -f ~/.ssh/id_dsa -t dsa -q"
+  #First we generate DSA key for ec2cluster (leaves passphrase empty):
+  su - ec2cluster -c "ssh-keygen -b 1024 -N '' -f ~/.ssh/id_dsa -t dsa -q"
   #Next we add this key to authorized keys on master node:
-  su - elasticwulf -c "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys"
-  su - elasticwulf -c "chmod 700 ~/.ssh"
-  su - elasticwulf -c "chmod 600 ~/.ssh/*"  
+  su - ec2cluster -c "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys"
+  su - ec2cluster -c "chmod 700 ~/.ssh"
+  su - ec2cluster -c "chmod 600 ~/.ssh/*"  
 else
   echo 'node is a worker, skipping NFS export step'
 fi
@@ -145,7 +145,7 @@ else
 fi
 
 ### Set up hosts file on each node. hostsfile will only be ready after all child nodes start booting.
-chmod go-w /mnt/elasticwulf
+chmod go-w /mnt/ec2cluster
 curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/hosts >> /etc/hosts
 sed -i -e 's/#   StrictHostKeyChecking ask/StrictHostKeyChecking no/g' /etc/ssh/ssh_config
 /etc/init.d/ssh restart
@@ -157,7 +157,7 @@ if [[ "$SECURITY_GROUPS" =~ "master" ]]
 then  
   echo "node is the master node, skipping NFS mount, waiting for worker nodes to mount home dir"
   # fetch openmpi_hostfile from jobs url
-  su - elasticwulf -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
+  su - ec2cluster -c "curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/openmpi_hostfile > openmpi_hostfile"
 
   WORKER_NODES=`cat openmpi_hostfile | wc -l | cut --delimiter=' ' -f 1`
   MOUNTED_NODES=`grep 'authenticated mount request' /var/log/syslog | wc -l`
@@ -170,20 +170,20 @@ then
   echo "All workers have mounted NFS home directory, cluster is ready for MPI jobs"
   
   # Quick test of local openmpi
-  su - elasticwulf -c "mpicc /home/elasticwulf/elasticwulf-service/lib/examples/hello.c -o /home/elasticwulf/hello" 
-  su - elasticwulf -c "mpirun -np 2 /home/elasticwulf/hello > local_mpi_smoketest.txt"  
+  su - ec2cluster -c "mpicc /home/ec2cluster/ec2cluster/lib/examples/hello.c -o /home/ec2cluster/hello" 
+  su - ec2cluster -c "mpirun -np 2 /home/ec2cluster/hello > local_mpi_smoketest.txt"  
   # Get total number of cpus in cluster from REST action
   CPU_COUNT=`curl -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/cpucount`
   # Quick smoke test of multinode openmpi run, 
-  su - elasticwulf -c "mpirun -np $CPU_COUNT --hostfile /home/elasticwulf/openmpi_hostfile /home/elasticwulf/hello > cluster_mpi_smoketest.txt"
+  su - ec2cluster -c "mpirun -np $CPU_COUNT --hostfile /home/ec2cluster/openmpi_hostfile /home/ec2cluster/hello > cluster_mpi_smoketest.txt"
 
   # kick off ruby command_runner.rb script (only on master node)
-  su - elasticwulf -c "ruby /home/elasticwulf/elasticwulf-service/lib/command_runner.rb $CPU_COUNT"  
+  su - ec2cluster -c "ruby /home/ec2cluster/ec2cluster/lib/command_runner.rb $CPU_COUNT"  
   
 else  
   echo "Node is worker, mounting master NFS"
   apt-get -y install portmap nfs-common
-  mount ${MASTER_HOSTNAME}:/mnt/elasticwulf /mnt/elasticwulf
+  mount ${MASTER_HOSTNAME}:/mnt/ec2cluster /mnt/ec2cluster
   # Send REST PUT to node url, signaling that NFS is ready on node..
   curl -H "Content-Type: application/json" -H "Accept: application/json" -X PUT -d "{"node": {"nfs_mounted":"true"}}" -u $admin_user:$admin_password -k ${rest_url}jobs/${job_id}/nodes/${NODE_ID}  
 fi

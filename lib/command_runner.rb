@@ -2,9 +2,9 @@
 
 # command_runner.rb NUMBER_OF_CPUS
 
-# This script is only run on the master node of the cluster as the "elasticwulf" user from within the NFS home directory "/home/elasticwulf/".  It fetches input & code from s3, runs the job command, and uploads outputs to S3.  The job command it runs will typically be a bash script containing MPI commands run across the entire cluster using the input data fetched from S3 which is available to all nodes via NFS.
+# This script is only run on the master node of the cluster as the "ec2cluster" user from within the NFS home directory "/home/ec2cluster/".  It fetches input & code from s3, runs the job command, and uploads outputs to S3.  The job command it runs will typically be a bash script containing MPI commands run across the entire cluster using the input data fetched from S3 which is available to all nodes via NFS.
 
-# Convention is for the supplied command to write all files to the working directory or a path relative to /home/elasticwulf/
+# Convention is for the supplied command to write all files to the working directory or a path relative to /home/ec2cluster/
 
 require 'rubygems'
 require 'activeresource'
@@ -14,7 +14,7 @@ require 'net/http'
 CPU_COUNT=ARGV[0]
 ENV['CPU_COUNT'] = CPU_COUNT
 
-CLUSTER_CONFIG = YAML.load_file("/home/elasticwulf/cluster_config.yml")
+CLUSTER_CONFIG = YAML.load_file("/home/ec2cluster/cluster_config.yml")
 puts "job id: " + CLUSTER_CONFIG['job_id'].to_s
 
 @s3handle = RightAws::S3Interface.new(CLUSTER_CONFIG['aws_access_key_id'],
@@ -54,7 +54,7 @@ def upload_s3file(output_path, localfile, s3handle)
   s3handle.put(bucket, s3key, File.open(localfile))
 end
 
-# Create an ActiveResource connection to the Elasticwulf REST web service
+# Create an ActiveResource connection to the ec2cluster REST web service
 class Job < ActiveResource::Base
   self.site = CLUSTER_CONFIG['rest_url']
   self.user = CLUSTER_CONFIG['admin_user']

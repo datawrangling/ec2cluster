@@ -1,10 +1,10 @@
 # This is a sample Capistrano config file for EC2 on Rails.
 # It should be edited and customized.
 
-set :application, "elasticwulf-service"
+set :application, "ec2cluster"
 
 set :scm, :git
-set :repository, "git://github.com/datawrangling/elasticwulf-service.git"
+set :repository, "git://github.com/datawrangling/ec2cluster.git"
 set :branch, "master"
 default_run_options[:shell] = false
 
