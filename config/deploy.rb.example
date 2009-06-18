@@ -135,7 +135,7 @@ namespace :delayed_job do
 end
 
 before "deploy:start", "delayed_job:stop"
-after "deploy:start", "delayed_job:restart" 
+after "deploy:start", "delayed_job:start" 
 after "deploy:stop", "delayed_job:stop" 
 after "deploy:restart", "delayed_job:restart"
 

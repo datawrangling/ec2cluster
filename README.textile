@@ -214,7 +214,7 @@ To manually restart the apache service or mongrels:
     $ cap ec2onrails:server:restart_services
     $ cap deploy:restart
 </pre>
-To manually stop and start the delayed_job workers:
+If the job processor is stuck waiting for instances, you might need to ensure the delayed_job worker is running.  You can manually stop and start the delayed_job workers as follows:
 <pre>
 	$ cap delayed_job:stop
 	$ cap delayed_job:start
