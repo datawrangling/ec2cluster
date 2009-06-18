@@ -6,7 +6,7 @@ class JobsController < ApplicationController
   # GET /jobs.xml
   def index
     @jobs = Job.paginate :page => params[:page], :order => 'created_at DESC', :per_page =>10
-    @job = Job.find(Job.maximum('id'))
+    @job = Job.find(:last)
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @jobs }
